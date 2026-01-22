@@ -1,290 +1,131 @@
-// Dashboard JS - Statistics and Organogram
+/**
+ * PRM Dashboard JS - High Readability Version
+ */
 
 const dashboardState = {
   membersData: [],
   loading: false
 };
 
-// Helper functions
-// Helper function to escape HTML characters
+// --- Helpers ---
+
 function escapeHtml(text) {
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
   return String(text || '').replace(/[&<>"']/g, m => map[m]);
 }
 
-// Helper function to convert Google Drive link/ID to thumbnail image URL
-// Accepts: 
-//   - Direct FILE IDs: "17EWg2y7RSYB397mzYCMKj2TVBtHdwuDy"
-//   - Google Drive URLs: "https://drive.google.com/open?id=17EWg2y7RSYB397mzYCMKj2TVBtHdwuDy"
-//   - Google Drive file URLs: "https://drive.google.com/file/d/17EWg2y7RSYB397mzYCMKj2TVBtHdwuDy/view"
 function convertGoogleDriveLink(url) {
   if (!url || String(url).trim() === '') return null;
-  
-  url = String(url).trim();
   let fileId = null;
-  
-  // If it's just a FILE ID (no URL format)
-  if (url.length === 33 && !url.includes('/') && !url.includes('?')) {
-    fileId = url;
-  }
-  // If it's a full URL, extract the FILE ID
-  else if (url.includes('drive.google.com') || url.includes('docs.google.com')) {
-    // Format: https://drive.google.com/open?id=FILE_ID
-    if (url.includes('id=')) {
-      fileId = url.split('id=')[1].split('&')[0];
-    }
-    // Format: https://drive.google.com/file/d/FILE_ID/view
-    else if (url.includes('/d/')) {
-      fileId = url.split('/d/')[1].split('/')[0];
-    }
-  }
-  
-  // If we found a FILE ID, return the thumbnail URL
-  if (fileId && fileId.length > 0) {
-    // Using thumbnail endpoint for better performance and public link compatibility
-    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w500`;
-  }
-  
-  // If it looks like a direct URL (http/https), return as is
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-  
-  return null;
+  if (url.length === 33 && !url.includes('/') && !url.includes('?')) fileId = url;
+  else if (url.includes('id=')) fileId = url.split('id=')[1].split('&')[0];
+  else if (url.includes('/d/')) fileId = url.split('/d/')[1].split('/')[0];
+  return fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=400` : (url.startsWith('http') ? url : null);
 }
 
-// Helper function to get SVG placeholder image (no external dependencies)
-function getPlaceholderImage() {
-  // Returns a base64-encoded SVG with a user icon
-  return 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNlNWU3ZWIiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI2MCIgcj0iMzAiIGZpbGw9IiM5Y2EzYWYiLz48cGF0aCBkPSJNIDMwIDEzMCBRIDMwIDEwMCA3MCAxMDAgUSAxMDAgMTAwIDEwMCAxMzAgTCAxMDAgMjAwIEwgMzAgMjAwIFoiIGZpbGw9IiM5Y2EzYWYiLz48cGF0aCBkPSJNIDEwMCAxMzAgUSAxMDAgMTAwIDEzMCAxMDAgUSAxNzAgMTAwIDE3MCAxMzAgTCAxNzAgMjAwIEwgMTAwIDIwMCBaIiBmaWxsPSIjOWNhM2FmIi8+PC9zdmc+';
-}
+const getPlaceholder = () => 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNlNWU3ZWIiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI2MCIgcj0iMzAiIGZpbGw9IiM5Y2EzYWYiLz48cGF0aCBkPSJNIDMwIDEzMCBRIDMwIDEwMCA3MCAxMDAgUSAxMDAgMTAwIDEwMCAxMzAgTCAxMDAgMjAwIEwgMzAgMjAwIFoiIGZpbGw9IiM5Y2EzYWYiLz48cGF0aCBkPSJNIDEwMCAxMzAgUSAxMDAgMTAwIDEzMCAxMDAgUSAxNzAgMTAwIDE3MCAxMzAgTCAxNzAgMjAwIEwgMTAwIDIwMCBaIiBmaWxsPSIjOWNhM2FmIi8+PC9zdmc+';
 
-function showLoading() {
-  const indicator = document.getElementById('loadingIndicator');
-  if (indicator) indicator.classList.remove('hidden');
-}
+// --- Data Fetching ---
 
-function hideLoading() {
-  const indicator = document.getElementById('loadingIndicator');
-  if (indicator) indicator.classList.add('hidden');
-}
-
-function showError(message) {
-  const alert = document.getElementById('errorAlert');
-  if (alert) {
-    alert.textContent = message;
-    alert.classList.remove('hidden');
-    setTimeout(() => alert.classList.add('hidden'), 5000);
-  }
-}
-
-function showSuccess(message) {
-  const alert = document.getElementById('successAlert');
-  if (alert) {
-    alert.textContent = message;
-    alert.classList.remove('hidden');
-    setTimeout(() => alert.classList.add('hidden'), 5000);
-  }
-}
-
-// Setup menu
-function setupMenuEventListeners() {
-  const menuToggle = document.getElementById('menuToggle');
-  const sidebar = document.getElementById('sidebar');
-  const menuOverlay = document.getElementById('menuOverlay');
-  
-  if (!menuToggle) return;
-
-  menuToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('-translate-x-full');
-    menuOverlay.classList.toggle('hidden');
-  });
-
-  menuOverlay.addEventListener('click', () => {
-    sidebar.classList.add('-translate-x-full');
-    menuOverlay.classList.add('hidden');
-  });
-}
-
-// Fetch all data
 async function fetchDashboardData() {
-  dashboardState.loading = true;
-  showLoading();
+  const loading = document.getElementById('loadingIndicator');
+  if (loading) loading.classList.remove('hidden');
 
   try {
-    // Fetch members
-    const { data: membersData, error: membersError } = await supabaseClient
-      .from('prm_members')
-      .select('*');
+    const { data, error } = await supabaseClient.from('prm_members').select('*');
+    if (error) throw error;
 
-    if (membersError) throw membersError;
-    dashboardState.membersData = membersData || [];
-
-    updateStatistics();
+    dashboardState.membersData = data || [];
+    const totalEl = document.getElementById('totalMembers');
+    if(totalEl) totalEl.textContent = dashboardState.membersData.length;
     renderOrganogram();
-
-    showSuccess('Dashboard data loaded successfully');
   } catch (error) {
-    console.error('Error fetching data:', error);
-    showError('Failed to load dashboard data: ' + error.message);
+    console.error('Fetch Error:', error);
+    const alert = document.getElementById('errorAlert');
+    if (alert) {
+        alert.textContent = 'Data Fetch Failed: ' + error.message;
+        alert.classList.remove('hidden');
+    }
   } finally {
-    dashboardState.loading = false;
-    hideLoading();
+    if (loading) loading.classList.add('hidden');
   }
 }
 
-// Update statistics
-function updateStatistics() {
-  const totalMembers = dashboardState.membersData.length;
+// --- Hierarchy Logic ---
 
-  document.getElementById('totalMembers').textContent = totalMembers;
-}
-// Render organogram
 function renderOrganogram() {
-  const organogramContainer = document.getElementById('organogramContainer');
-  
-  // Filter out Core Team members
-  const filteredMembers = dashboardState.membersData.filter(member => {
-    const teamCol = Object.keys(member).find(key => key.toLowerCase() === 'team' || key.toLowerCase() === 'preferred_team');
-    const team = teamCol ? String(member[teamCol] || '').trim() : '';
-    return team.toLowerCase() !== 'core team';
-  });
-  
-  // Group members by position
-  const positions = {
-    'Convener': [],
-    'Joint Convener': [],
-    'Member Secretary': [],
-    'Chief Coordinator': [],
-    'Deputy Chief Coordinator': [],
-    'Coordinator': [],
-    'Member': []
-  };
+  const container = document.getElementById('organogramContainer');
+  if (!container) return;
 
-  filteredMembers.forEach(member => {
-    const posCol = Object.keys(member).find(key => key.toLowerCase() === 'position');
-    let position = posCol ? String(member[posCol] || '').trim() : 'Member';
-    
-    // Categorize position
-    if (position.toLowerCase().includes('convener')) {
-      if (position.toLowerCase().includes('joint')) {
-        positions['Joint Convener'].push(member);
-      } else {
-        positions['Convener'].push(member);
-      }
-    } else if (position.toLowerCase().includes('member secretary')) {
-      positions['Member Secretary'].push(member);
-    } else if (position.toLowerCase().includes('chief coordinator')) {
-      if (position.toLowerCase().includes('deputy')) {
-        positions['Deputy Chief Coordinator'].push(member);
-      } else {
-        positions['Chief Coordinator'].push(member);
-      }
-    } else if (position.toLowerCase().includes('coordinator')) {
-      positions['Coordinator'].push(member);
-    } else {
-      positions['Member'].push(member);
+  const levels = [
+    { key: 'Convener', label: 'Convener', border: 'border-red-500', bg: 'bg-red-50', text: 'text-red-700' },
+    { key: 'Joint Convener', label: 'Joint Convener', border: 'border-orange-500', bg: 'bg-orange-50', text: 'text-orange-700' },
+    { key: 'Member Secretary', label: 'Member Secretary', border: 'border-yellow-500', bg: 'bg-yellow-50', text: 'text-yellow-700' },
+    { key: 'Chief Coordinator', label: 'Chief Coordinator', border: 'border-green-500', bg: 'bg-green-50', text: 'text-green-700' },
+    { key: 'Deputy Chief Coordinator', label: 'Deputy Chief Coordinator', border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-700' },
+    { key: 'Team Coordinator', label: 'Team Coordinator', border: 'border-indigo-500', bg: 'bg-indigo-50', text: 'text-indigo-700' }
+  ];
+
+  let html = '<div class="flex flex-col items-center gap-12">';
+
+  levels.forEach((level, idx) => {
+    const members = dashboardState.membersData.filter(m => 
+      String(m.position || '').trim().toLowerCase() === level.key.toLowerCase()
+    );
+
+    if (members.length > 0) {
+      html += `
+        <div class="w-full flex flex-col items-center">
+          <div class="mb-8 relative">
+            <span class="px-6 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest border-2 ${level.border} ${level.bg} ${level.text} shadow-sm">
+              ${level.label}
+            </span>
+          </div>
+          <div class="flex flex-wrap justify-center gap-6 md:gap-10">
+            ${members.map(m => renderMemberCard(m, level.border)).join('')}
+          </div>
+          ${idx < levels.length - 1 && hasLowerMembers(idx, levels) ? `
+            <div class="w-px h-10 bg-gray-300 mt-10"></div>
+          ` : ''}
+        </div>
+      `;
     }
   });
 
-  let organogramHtml = '';
-
-  // Convener (top level)
-  organogramHtml += renderPositionRow('Convener', positions['Convener'], 'bg-red-100 border-red-300');
-
-  // Joint Conveners
-  if (positions['Joint Convener'].length > 0) {
-    organogramHtml += renderPositionRow('Joint Convener', positions['Joint Convener'], 'bg-orange-100 border-orange-300');
-  }
-
-  // Member Secretary
-  if (positions['Member Secretary'].length > 0) {
-    organogramHtml += renderPositionRow('Member Secretary', positions['Member Secretary'], 'bg-yellow-100 border-yellow-300');
-  }
-
-  // Chief Coordinator
-  if (positions['Chief Coordinator'].length > 0) {
-    organogramHtml += renderPositionRow('Chief Coordinator', positions['Chief Coordinator'], 'bg-green-100 border-green-300');
-  }
-
-  // Deputy Chief Coordinator
-  if (positions['Deputy Chief Coordinator'].length > 0) {
-    organogramHtml += renderPositionRow('Deputy Chief Coordinator', positions['Deputy Chief Coordinator'], 'bg-blue-100 border-blue-300');
-  }
-
-  // Coordinators
-  if (positions['Coordinator'].length > 0) {
-    organogramHtml += renderPositionRow('Coordinator', positions['Coordinator'], 'bg-indigo-100 border-indigo-300');
-  }
-
-  // Members (if any with explicit position)
-  if (positions['Member'].length > 0 && positions['Member'].length <= 10) {
-    organogramHtml += renderPositionRow('Member', positions['Member'], 'bg-gray-100 border-gray-300');
-  }
-
-  organogramContainer.innerHTML = organogramHtml || '<p class="text-gray-500">No organogram data available</p>';
+  html += '</div>';
+  container.innerHTML = dashboardState.membersData.length > 0 ? html : '<p class="text-center text-gray-400 py-10">No organizational data.</p>';
 }
 
-// Render position row with member cards
-function renderPositionRow(positionTitle, members, bgClass) {
-  if (members.length === 0) return '';
+function hasLowerMembers(currentIndex, levels) {
+  const lowerKeys = levels.slice(currentIndex + 1).map(l => l.key.toLowerCase());
+  return dashboardState.membersData.some(m => lowerKeys.includes(String(m.position || '').trim().toLowerCase()));
+}
 
-  let html = `
-    <div class="w-full">
-      <h3 class="text-center font-bold text-lg text-gray-900 mb-6 pb-4 border-b-2 border-gray-200">${positionTitle}</h3>
-      <div class="flex flex-wrap justify-center gap-6">
-  `;
+function renderMemberCard(member, borderColor) {
+  const name = escapeHtml(member.name || 'Unknown');
+  const photo = convertGoogleDriveLink(member.photo);
+  const position = escapeHtml(member.stage || 'Member');
+  const team = escapeHtml(member.team || member.scout_group || 'General');
 
-  members.forEach((member, index) => {
-    const nameCol = Object.keys(member).find(key => key.toLowerCase() === 'name');
-    const photoCol = Object.keys(member).find(key => key.toLowerCase() === 'photo');
-    const posCol = Object.keys(member).find(key => key.toLowerCase() === 'position');
-    
-    const name = nameCol ? escapeHtml(String(member[nameCol] || '')) : 'N/A';
-    let photoUrl = photoCol ? member[photoCol] : null;
-    
-    // Convert Google Drive link/ID to thumbnail image URL
-    photoUrl = convertGoogleDriveLink(photoUrl);
-    const position = posCol ? escapeHtml(String(member[posCol] || '')) : '';
-    const uniqueId = `img-${index}-${Date.now()}`;
-
-    html += `
-      <div class="flex flex-col items-center w-40">
-        <!-- Photo Container -->
-        <div class="w-32 h-32 mb-3 rounded-lg overflow-hidden flex items-center justify-center border-4 ${bgClass} bg-gray-50">
-          <img 
-            id="${uniqueId}"
-            src="${photoUrl || getPlaceholderImage()}" 
-            alt="${name}" 
-            class="w-full h-full object-cover"
-            onerror="this.src='${getPlaceholderImage()}'"
-            loading="lazy"
-          >
-        </div>
-        <!-- Name -->
-        <p class="text-center text-sm font-semibold text-gray-900 line-clamp-2 mb-1">${name}</p>
-        <!-- Position -->
-        ${position ? `<p class="text-center text-xs text-gray-600 line-clamp-1">${position}</p>` : ''}
+  return `
+    <div class="flex flex-col items-center w-36 md:w-48 group">
+      <div class="node-card w-24 h-24 md:w-32 md:h-32 mb-3 rounded-full overflow-hidden border-[4px] shadow-md group-hover:scale-105 transition-all duration-300 ${borderColor}">
+        <img 
+          src="${photo || getPlaceholder()}" 
+          alt="${name}" 
+          class="w-full h-full object-cover"
+          onerror="this.src='${getPlaceholder()}'"
+        >
       </div>
-    `;
-  });
-
-  html += `
+      <div class="text-center space-y-0.5">
+        <p class="text-[14px] md:text-[16px] font-black text-gray-900 leading-tight uppercase tracking-tight">${name}</p>
+        <div class="bg-gray-100 px-2 py-0.5 rounded inline-block">
+          <p class="text-[9px] md:text-[10px] font-bold text-gray-600 uppercase tracking-tighter">${position}</p>
+        </div>
+        <p class="text-[10px] md:text-[11px] font-medium text-blue-600 uppercase tracking-tighter">${team}</p>
       </div>
     </div>
   `;
-
-  return html;
 }
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-  setupMenuEventListeners();
-  fetchDashboardData();
-});
+document.addEventListener('DOMContentLoaded', fetchDashboardData);
