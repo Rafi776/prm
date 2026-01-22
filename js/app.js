@@ -5,18 +5,64 @@ const state = {
   recruitmentData: [],
   recruitmentDataFiltered: [],
   membersData: [],
+  membersDataFiltered: [],
   currentTab: 'recruitment',
   loading: false,
   searchTerm: '',
-  teamFilter: ''
+  teamFilter: '',
+  memberSearchTerm: '',
+  memberTeamFilter: ''
 };
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM loaded, initializing app');
+  setupMenuEventListeners();
   setupEventListeners();
   switchTab('recruitment');
 });
+
+// Setup hamburger menu event listeners
+function setupMenuEventListeners() {
+  const menuToggle = document.getElementById('menuToggle');
+  const sidebar = document.getElementById('sidebar');
+  const menuOverlay = document.getElementById('menuOverlay');
+  const menuItems = document.querySelectorAll('.menu-item');
+  
+  // Toggle menu
+  menuToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('-translate-x-full');
+    menuOverlay.classList.toggle('hidden');
+  });
+  
+  // Close menu when overlay is clicked
+  menuOverlay.addEventListener('click', () => {
+    sidebar.classList.add('-translate-x-full');
+    menuOverlay.classList.add('hidden');
+  });
+  
+  // Handle menu item clicks
+  menuItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const menuType = item.dataset.menu;
+      console.log('Menu item clicked:', menuType);
+      
+      // Close menu
+      sidebar.classList.add('-translate-x-full');
+      menuOverlay.classList.add('hidden');
+      
+      // Handle menu navigation
+      if (menuType === 'core-team') {
+        switchTab('recruitment');
+      } else if (menuType === 'all-members') {
+        switchTab('members');
+      } else if (menuType === 'recruitment') {
+        switchTab('recruitment');
+      }
+    });
+  });
+}
 
 // Setup event listeners for tab switching
 function setupEventListeners() {
@@ -28,7 +74,7 @@ function setupEventListeners() {
   document.getElementById('waitingTab').addEventListener('click', () => switchTab('waiting'));
   document.getElementById('membersTab').addEventListener('click', () => switchTab('members'));
   
-  // Search listener
+  // Search listener for recruitment
   const searchInput = document.getElementById('searchInput');
   console.log('🔍 Search input element found:', !!searchInput);
   
@@ -43,7 +89,7 @@ function setupEventListeners() {
     console.error('❌ Search input element NOT found!');
   }
   
-  // Team filter listener
+  // Team filter listener for recruitment
   const teamFilter = document.getElementById('teamFilter');
   console.log('🏢 Team filter element found:', !!teamFilter);
   
@@ -56,6 +102,24 @@ function setupEventListeners() {
     });
   } else {
     console.error('❌ Team filter element NOT found!');
+  }
+
+  // Search listener for members
+  const searchInputMembers = document.getElementById('searchInputMembers');
+  if (searchInputMembers) {
+    searchInputMembers.addEventListener('input', function(e) {
+      state.memberSearchTerm = e.target.value.toLowerCase();
+      applyMembersFiltersAndSearch();
+    });
+  }
+
+  // Team filter listener for members
+  const teamFilterMembers = document.getElementById('teamFilterMembers');
+  if (teamFilterMembers) {
+    teamFilterMembers.addEventListener('change', function(e) {
+      state.memberTeamFilter = e.target.value;
+      applyMembersFiltersAndSearch();
+    });
   }
 }
 
@@ -211,6 +275,87 @@ function applyFiltersAndSearch() {
   
   console.log('   ✅ Results:', state.recruitmentDataFiltered.length, 'records');
   renderRecruitmentTable();
+}
+
+// Populate team filter options for members
+function populateMembersTeamFilterOptions() {
+  console.log('🏢 Populating team filter options for members...');
+  
+  const teams = new Set();
+  
+  state.membersData.forEach(row => {
+    const teamCol = Object.keys(row).find(key => key.toLowerCase() === 'team' || key.toLowerCase() === 'preferred_team');
+    if (teamCol && row[teamCol]) {
+      teams.add(String(row[teamCol]).trim());
+    }
+  });
+  
+  const teamFilter = document.getElementById('teamFilterMembers');
+  if (teamFilter) {
+    // Remove existing options except the first one
+    while (teamFilter.options.length > 1) {
+      teamFilter.remove(1);
+    }
+    
+    // Add options sorted alphabetically
+    Array.from(teams).sort().forEach(team => {
+      const option = document.createElement('option');
+      option.value = team;
+      option.textContent = team;
+      teamFilter.appendChild(option);
+    });
+    
+    console.log('✅ Members team filter populated with', teams.size, 'teams');
+  }
+}
+
+// Apply search and filters for members
+function applyMembersFiltersAndSearch() {
+  const search = state.memberSearchTerm.toLowerCase().trim();
+  const teamFilter = state.memberTeamFilter;
+  
+  console.log('🔎 applyMembersFiltersAndSearch called');
+  console.log('   Search term:', search);
+  console.log('   Team filter:', teamFilter);
+  console.log('   Total members data:', state.membersData.length);
+  
+  if (state.membersData.length === 0) {
+    console.log('   ⚠️ No members data available');
+    state.membersDataFiltered = [];
+    renderMembersTable();
+    return;
+  }
+  
+  // Filter records based on search and team filter
+  state.membersDataFiltered = state.membersData.filter(row => {
+    // Apply team filter
+    let matchesTeam = true;
+    if (teamFilter) {
+      const teamCol = Object.keys(row).find(key => key.toLowerCase() === 'team' || key.toLowerCase() === 'preferred_team');
+      if (teamCol) {
+        matchesTeam = String(row[teamCol] || '').trim() === teamFilter;
+      }
+    }
+    
+    // Apply search filter
+    let matchesSearch = true;
+    if (search) {
+      matchesSearch = false;
+      for (const key in row) {
+        if (row[key] != null) {
+          if (String(row[key]).toLowerCase().includes(search)) {
+            matchesSearch = true;
+            break;
+          }
+        }
+      }
+    }
+    
+    return matchesTeam && matchesSearch;
+  });
+  
+  console.log('   ✅ Results:', state.membersDataFiltered.length, 'records');
+  renderMembersTable();
 }
 
 // Switch between tabs
@@ -466,6 +611,9 @@ function downloadCSV(tab) {
       return matches;
     });
     filename = 'waiting_candidates.csv';
+  } else if (tab === 'members') {
+    data = state.membersDataFiltered;
+    filename = 'members_records.csv';
   }
   
   if (data.length === 0) {
@@ -637,21 +785,45 @@ async function fetchMembersData() {
   showLoading();
   
   try {
+    console.log('🔍 Fetching members data from Supabase...');
     const { data, error } = await supabaseClient
       .from('prm_members')
       .select('*');
     
     if (error) {
-      console.error('Error fetching members data:', error);
-      showError('Failed to fetch members data');
+      console.error('❌ Supabase error:', error);
+      showError('Failed to fetch members data: ' + error.message);
       return;
     }
     
+    console.log('✅ Members data fetched successfully!');
+    console.log('📊 Record count:', data ? data.length : 0);
+    
     state.membersData = data || [];
-    renderMembersTable();
+    console.log('📝 State updated. Total members:', state.membersData.length);
+    
+    // Populate team filter options
+    populateMembersTeamFilterOptions();
+    
+    // Reset search and filters
+    state.memberSearchTerm = '';
+    state.memberTeamFilter = '';
+    const searchInput = document.getElementById('searchInputMembers');
+    if (searchInput) {
+      searchInput.value = '';
+    }
+    const teamFilter = document.getElementById('teamFilterMembers');
+    if (teamFilter) {
+      teamFilter.value = '';
+    }
+    
+    // Apply filters (which will show all data since filters are empty)
+    applyMembersFiltersAndSearch();
+    
+    showSuccess(`Loaded ${state.membersData.length} member records`);
   } catch (error) {
-    console.error('Unexpected error:', error);
-    showError('An unexpected error occurred');
+    console.error('❌ Unexpected error:', error);
+    showError('An unexpected error occurred: ' + error.message);
   } finally {
     state.loading = false;
     hideLoading();
@@ -662,36 +834,41 @@ async function fetchMembersData() {
 function renderMembersTable() {
   const container = document.getElementById('membersTableContainer');
   
-  if (state.membersData.length === 0) {
+  console.log('📊 renderMembersTable called');
+  console.log('   Container found:', !!container);
+  console.log('   Filtered data count:', state.membersDataFiltered ? state.membersDataFiltered.length : 0);
+  
+  if (!state.membersDataFiltered || state.membersDataFiltered.length === 0) {
+    console.log('   ⚠️ No data to display');
     container.innerHTML = '<p class="text-gray-500 text-center py-4">No member records found</p>';
     return;
   }
   
   // Get all columns and exclude id, photo_url, and created_at
-  const allColumns = Object.keys(state.membersData[0]);
+  const allColumns = Object.keys(state.membersDataFiltered[0]);
   const columns = allColumns.filter(col => col !== 'id' && col !== 'photo_url' && col !== 'created_at');
   
-  // Build table header
-  let html = '<div class="overflow-x-auto"><table class="w-full border-collapse border border-gray-300">';
-  html += '<thead class="bg-gray-100"><tr>';
-  html += '<th class="border border-gray-300 p-2 text-left font-semibold">SL. NO</th>';
+  // Build table with responsive columns
+  let html = '<div class="overflow-auto bg-gray-50 rounded-lg"><table class="w-full text-sm">';
+  html += '<thead class="bg-gray-200 sticky top-0"><tr>';
+  html += '<th class="px-3 py-2 text-left font-semibold text-gray-900 whitespace-nowrap">SL. NO</th>';
   
   columns.forEach(col => {
-    html += `<th class="border border-gray-300 p-2 text-left font-semibold">${escapeHtml(col)}</th>`;
+    html += `<th class="px-3 py-2 text-left font-semibold text-gray-900 whitespace-nowrap">${escapeHtml(col)}</th>`;
   });
   
   html += '</tr></thead><tbody>';
   
   // Build table rows
-  state.membersData.forEach((row, index) => {
-    html += '<tr class="hover:bg-gray-50">';
+  state.membersDataFiltered.forEach((row, index) => {
+    html += '<tr class="border-b border-gray-200 hover:bg-gray-100">';
     
     // Add serial number
-    html += `<td class="border border-gray-300 p-2 font-medium">${index + 1}</td>`;
+    html += `<td class="px-3 py-2 text-gray-700 whitespace-nowrap font-medium">${index + 1}</td>`;
     
     columns.forEach(col => {
-      const value = row[col] !== null ? escapeHtml(String(row[col])) : '-';
-      html += `<td class="border border-gray-300 p-2">${value}</td>`;
+      const value = row[col] !== null ? escapeHtml(String(row[col])).substring(0, 50) : '-';
+      html += `<td class="px-3 py-2 text-gray-700 whitespace-nowrap">${value}</td>`;
     });
     
     html += '</tr>';
@@ -699,11 +876,6 @@ function renderMembersTable() {
   
   html += '</tbody></table></div>';
   container.innerHTML = html;
-  
-  // Attach event listeners to status dropdowns
-  document.querySelectorAll('.status-dropdown').forEach(dropdown => {
-    dropdown.addEventListener('change', handleStatusChange);
-  });
 }
 
 // Handle status change
