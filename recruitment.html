@@ -25,6 +25,22 @@
     @media (min-width: 768px) {
       .main-content { margin-left: 16rem; }
     }
+
+
+  /* Recruitment Tabs UX */
+  .recruitment-tab {
+    transition: all 0.2s ease;
+  }
+
+  .recruitment-tab:hover {
+    background-color: rgba(255, 255, 255, 0.6);
+  }
+
+  .recruitment-tab.active {
+    background-color: #ffffff;
+    color: #2563eb; /* blue-600 */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans">
@@ -76,10 +92,26 @@
 
       <div class="mb-6 overflow-x-auto no-scrollbar bg-gray-200/50 p-1 rounded-xl">
         <div class="flex flex-nowrap gap-1 min-w-max">
-          <button id="recruitmentTab" class="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 bg-white shadow-sm text-blue-600">All</button>
-          <button id="selectedTab" class="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 hover:bg-white/50">Selected</button>
-          <button id="failedTab" class="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 hover:bg-white/50">Failed</button>
-          <button id="waitingTab" class="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 text-gray-600 hover:bg-white/50">Waiting</button>
+          <button id="recruitmentTab"
+  class="recruitment-tab active px-6 py-2.5 rounded-lg text-sm font-semibold">
+  All
+</button>
+
+<button id="selectedTab"
+  class="recruitment-tab px-6 py-2.5 rounded-lg text-sm font-semibold text-gray-600">
+  Selected
+</button>
+
+<button id="failedTab"
+  class="recruitment-tab px-6 py-2.5 rounded-lg text-sm font-semibold text-gray-600">
+  Failed
+</button>
+
+<button id="waitingTab"
+  class="recruitment-tab px-6 py-2.5 rounded-lg text-sm font-semibold text-gray-600">
+  Waiting
+</button>
+
         </div>
       </div>
 
@@ -163,5 +195,80 @@
       };
     }
   </script>
+
+
+
+
+  <div id="memberModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+  <div id="modalOverlay" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onclick="closePRMModal()"></div>
+  <div class="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-white/20">
+    <button onclick="closePRMModal()" class="absolute right-4 top-4 z-10 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-all">✕</button>
+    <div class="flex flex-col md:flex-row">
+      <div class="w-full md:w-2/5 bg-gray-50 flex items-center justify-center p-8 border-r border-gray-100">
+        <div id="modalPhoto" class="w-48 h-48 md:w-full md:h-64 rounded-2xl overflow-hidden shadow-md bg-white"></div>
+      </div>
+      <div class="w-full md:w-3/5 p-8">
+        <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 mb-1"></h3>
+        <p id="modalSubtitle" class="text-blue-600 font-bold text-[10px] tracking-widest mb-6 uppercase"></p>
+        <div id="modalBody" class="grid grid-cols-1 gap-4 max-h-[300px] overflow-y-auto no-scrollbar pr-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.closePRMModal = function() {
+    document.getElementById('memberModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  };
+
+  window.showPRMModal = function(data) {
+    console.log("Modal Data Received:", data); // Check your browser console (F12) to see if data is here
+    const modal = document.getElementById('memberModal');
+    if (!modal || !data) return;
+
+    // 1. IMPROVED PHOTO LOGIC
+    // We check for 'photo_url' (Recruitment) or 'photo' (Members)
+    const rawPath = data.photo_url || data.photo || "";
+    let finalPhotoUrl = "";
+
+    if (rawPath.includes('drive.google.com')) {
+      // Extract ID from Google Drive Link
+      const idMatch = rawPath.match(/\/d\/([^/]+)/) || rawPath.match(/id=([^&]+)/);
+      if (idMatch && idMatch[1]) {
+        finalPhotoUrl = `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w600`;
+      }
+    } else {
+      finalPhotoUrl = rawPath;
+    }
+    
+    const photoContainer = document.getElementById('modalPhoto');
+    photoContainer.innerHTML = finalPhotoUrl 
+      ? `<img src="${finalPhotoUrl}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=\"p-4 text-xs text-center text-gray-400\">Image Load Failed</div>'">` 
+      : `<div class="w-full h-full flex items-center justify-center text-gray-300 font-bold uppercase text-xs">No Photo Available</div>`;
+
+    // 2. TEXT HEADERS
+    document.getElementById('modalTitle').textContent = data.full_name || data.name || "Details";
+    document.getElementById('modalSubtitle').textContent = data.preferred_team || data.team || data.role || "Information";
+
+    // 3. DATA GRID
+    const body = document.getElementById('modalBody');
+    body.innerHTML = '';
+    const skip = ['id', 'photo', 'photo_url', 'created_at', 'status'];
+    
+    Object.entries(data).forEach(([key, val]) => {
+      if (skip.includes(key.toLowerCase())) return;
+      body.innerHTML += `
+        <div class="border-b border-gray-100 pb-2">
+          <span class="block text-[9px] text-gray-400 font-black uppercase tracking-tighter">${key.replace(/_/g, ' ')}</span>
+          <span class="text-gray-700 font-medium break-words">${val || '—'}</span>
+        </div>`;
+    });
+
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  };
+</script>
+
 </body>
 </html>

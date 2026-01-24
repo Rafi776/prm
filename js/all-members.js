@@ -1,5 +1,3 @@
-// All Members Page JS
-
 const membersState = {
   allData: [],
   filteredData: [],
@@ -8,244 +6,177 @@ const membersState = {
   loading: false
 };
 
-// Helper functions
+// Helper: Convert Google Drive link to direct image
+function getDriveImage(url, size = 'w200') {
+  if (!url || !url.includes('drive.google.com')) return url;
+  try {
+    const idMatch = url.match(/\/d\/([^/]+)/) || url.match(/id=([^&]+)/);
+    if (idMatch && idMatch[1]) {
+      return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=${size}`;
+    }
+  } catch (e) { console.error(e); }
+  return url;
+}
+
 function escapeHtml(text) {
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
+  const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
   return String(text || '').replace(/[&<>"']/g, m => map[m]);
 }
 
-function showLoading() {
-  const indicator = document.getElementById('loadingIndicator');
-  if (indicator) indicator.classList.remove('hidden');
-}
-
-function hideLoading() {
-  const indicator = document.getElementById('loadingIndicator');
-  if (indicator) indicator.classList.add('hidden');
-}
-
-function showError(message) {
-  const alert = document.getElementById('errorAlert');
-  if (alert) {
-    alert.textContent = message;
-    alert.classList.remove('hidden');
-    setTimeout(() => alert.classList.add('hidden'), 5000);
-  }
-}
-
-function showSuccess(message) {
-  const alert = document.getElementById('successAlert');
-  if (alert) {
-    alert.textContent = message;
-    alert.classList.remove('hidden');
-    setTimeout(() => alert.classList.add('hidden'), 5000);
-  }
-}
-
-// Setup menu
-function setupMenuEventListeners() {
-  const menuToggle = document.getElementById('menuToggle');
-  const sidebar = document.getElementById('sidebar');
-  const menuOverlay = document.getElementById('menuOverlay');
+// Modal Functions
+function openMemberModal(index) {
+  const member = membersState.filteredData[index];
+  const modal = document.getElementById('memberModal');
   
-  if (!menuToggle) return;
+  // Set Photo
+  const photoUrl = getDriveImage(member.photo, 'w600');
+  document.getElementById('modalPhotoContainer').innerHTML = member.photo 
+    ? `<img src="${photoUrl}" class="w-full h-full object-cover" alt="Profile">`
+    : `<div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">No Photo</div>`;
 
-  menuToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('-translate-x-full');
-    menuOverlay.classList.toggle('hidden');
+  // Set Header Info
+  document.getElementById('modalMemberName').textContent = member.name || member.full_name || "Member Profile";
+  document.getElementById('modalMemberSubtitle').textContent = member.team || member.preferred_team || "Team Member";
+
+  // Build Details List (Skips sensitive or visual columns)
+  const grid = document.getElementById('modalDetailsGrid');
+  grid.innerHTML = '';
+  Object.entries(member).forEach(([key, value]) => {
+    if (['id', 'photo', 'created_at'].includes(key.toLowerCase())) return;
+    
+    grid.innerHTML += `
+      <div class="border-b border-gray-100 pb-2">
+        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-tighter">${key.replace(/_/g, ' ')}</label>
+        <p class="text-gray-800 font-medium">${escapeHtml(value || 'N/A')}</p>
+      </div>`;
   });
 
-  menuOverlay.addEventListener('click', () => {
-    sidebar.classList.add('-translate-x-full');
-    menuOverlay.classList.add('hidden');
-  });
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
 }
 
-// Setup event listeners
-function setupEventListeners() {
-  const searchInput = document.getElementById('searchInput');
-  const teamFilter = document.getElementById('teamFilter');
-
-  if (searchInput) {
-    searchInput.addEventListener('input', function(e) {
-      membersState.searchTerm = e.target.value.toLowerCase();
-      applyFilters();
-    });
-  }
-
-  if (teamFilter) {
-    teamFilter.addEventListener('change', function(e) {
-      membersState.teamFilter = e.target.value;
-      applyFilters();
-    });
-  }
+function closeModal() {
+  document.getElementById('memberModal').classList.add('hidden');
+  document.body.style.overflow = 'auto';
 }
 
-// Populate team filter
-function populateTeamFilter() {
-  const teams = new Set();
-
-  membersState.allData.forEach(row => {
-    const teamCol = Object.keys(row).find(key => key.toLowerCase() === 'team' || key.toLowerCase() === 'preferred_team');
-    if (teamCol && row[teamCol]) {
-      teams.add(String(row[teamCol]).trim());
-    }
-  });
-
-  const teamFilter = document.getElementById('teamFilter');
-  if (teamFilter) {
-    while (teamFilter.options.length > 1) {
-      teamFilter.remove(1);
-    }
-
-    Array.from(teams).sort().forEach(team => {
-      const option = document.createElement('option');
-      option.value = team;
-      option.textContent = team;
-      teamFilter.appendChild(option);
-    });
-  }
-}
-
-// Apply filters
+// Logic: Filters & Table
 function applyFilters() {
-  const search = membersState.searchTerm.toLowerCase().trim();
-  const teamFilter = membersState.teamFilter;
-
+  const search = membersState.searchTerm.toLowerCase();
   membersState.filteredData = membersState.allData.filter(row => {
-    // Apply team filter
-    let matchesTeam = true;
-    if (teamFilter) {
-      const teamCol = Object.keys(row).find(key => key.toLowerCase() === 'team' || key.toLowerCase() === 'preferred_team');
-      if (teamCol) {
-        matchesTeam = String(row[teamCol] || '').trim() === teamFilter;
-      }
-    }
-
-    // Apply search filter
-    let matchesSearch = true;
-    if (search) {
-      matchesSearch = false;
-      for (const key in row) {
-        if (row[key] != null) {
-          if (String(row[key]).toLowerCase().includes(search)) {
-            matchesSearch = true;
-            break;
-          }
-        }
-      }
-    }
-
+    const matchesTeam = !membersState.teamFilter || 
+      String(row.team || row.preferred_team).trim() === membersState.teamFilter;
+    
+    const matchesSearch = !search || Object.entries(row).some(([key, val]) => 
+      key !== 'photo' && String(val).toLowerCase().includes(search)
+    );
+    
     return matchesTeam && matchesSearch;
   });
-
   renderTable();
 }
 
-// Render table
 function renderTable() {
   const container = document.getElementById('tableContainer');
-
   if (membersState.filteredData.length === 0) {
-    container.innerHTML = '<p class="text-gray-500 text-center py-4">No records found</p>';
+    container.innerHTML = '<p class="text-center py-10 text-gray-400">No members found.</p>';
+    membersState.filteredData.forEach((row, index) => {
+    // JUST CALL THE UTILITY HERE
+    html += `<tr onclick="PRM_Utils.showMemberDetails(membersState.filteredData[${index}])" class="hover:bg-blue-50 cursor-pointer transition-colors">
+      <td class="px-6 py-4">${index + 1}</td>
+      ${columns.map(col => {
+        let content = row[col];
+        if (col === 'photo') {
+            content = `<img src="${PRM_Utils.getDriveImage(row[col])}" class="w-10 h-10 rounded-full object-cover border">`;
+        }
+        return `<td class="px-6 py-4">${content || '-'}</td>`;
+      }).join('')}
+    </tr>`;
+  });
     return;
+
+    
   }
 
-  const allColumns = Object.keys(membersState.filteredData[0]);
-  const columns = allColumns.filter(col => col !== 'id' && col !== 'photo' && col !== 'created_at');
+  const columns = Object.keys(membersState.filteredData[0]).filter(c => !['id', 'created_at'].includes(c));
 
-  let html = '<div class="overflow-auto bg-gray-50 rounded-lg"><table class="w-full text-sm">';
-  html += '<thead class="bg-gray-200 sticky top-0"><tr>';
-  html += '<th class="px-3 py-2 text-left font-semibold text-gray-900 whitespace-nowrap">SL. NO</th>';
-
-  columns.forEach(col => {
-    html += `<th class="px-3 py-2 text-left font-semibold text-gray-900 whitespace-nowrap">${escapeHtml(col)}</th>`;
-  });
-
-  html += '</tr></thead><tbody>';
+  let html = `<table class="w-full text-sm text-left">
+    <thead class="bg-gray-50 text-gray-600 border-b border-gray-100">
+      <tr>
+        <th class="px-6 py-4 font-bold">SL.</th>
+        ${columns.map(c => `<th class="px-6 py-4 font-bold uppercase tracking-wider">${c}</th>`).join('')}
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">`;
 
   membersState.filteredData.forEach((row, index) => {
-    html += '<tr class="border-b border-gray-200 hover:bg-gray-100">';
-    html += `<td class="px-3 py-2 text-gray-700 whitespace-nowrap font-medium">${index + 1}</td>`;
-
-    columns.forEach(col => {
-      const value = row[col] !== null ? escapeHtml(String(row[col])).substring(0, 50) : '-';
-      html += `<td class="px-3 py-2 text-gray-700 whitespace-nowrap">${value}</td>`;
-    });
-
-    html += '</tr>';
+    html += `<tr onclick="openMemberModal(${index})" class="hover:bg-blue-50/40 transition-colors cursor-pointer group">
+      <td class="px-6 py-4 text-gray-400">${index + 1}</td>
+      ${columns.map(col => {
+        let content = row[col];
+        if (col === 'photo') {
+          content = `<img src="${getDriveImage(row[col])}" class="w-10 h-10 rounded-full object-cover border border-gray-200" onerror="this.src='https://ui-avatars.com/api/?name=${index+1}'">`;
+        } else {
+          content = escapeHtml(String(content || '-')).substring(0, 40);
+        }
+        return `<td class="px-6 py-4 text-gray-700">${content}</td>`;
+      }).join('')}
+    </tr>`;
   });
 
-  html += '</tbody></table></div>';
-  container.innerHTML = html;
+  container.innerHTML = html + '</tbody></table>';
 }
 
-// Download CSV
-function downloadCSV() {
-  if (membersState.filteredData.length === 0) {
-    alert('No data to download');
-    return;
-  }
-
-  const allColumns = Object.keys(membersState.filteredData[0]);
-  const columns = allColumns.filter(col => col !== 'id' && col !== 'photo' && col !== 'created_at');
-
-  let csv = '"SL. NO",' + columns.map(col => `"${col.replace(/"/g, '""')}"`).join(',') + '\n';
-
-  membersState.filteredData.forEach((row, index) => {
-    csv += `"${index + 1}",` + columns.map(col => {
-      const val = row[col] !== null ? String(row[col]).replace(/"/g, '""') : '';
-      return `"${val}"`;
-    }).join(',') + '\n';
-  });
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.setAttribute('href', URL.createObjectURL(blob));
-  link.setAttribute('download', 'members.csv');
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  showSuccess(`Downloaded members.csv (${membersState.filteredData.length} records)`);
-}
-
-// Fetch data
+// Standard UI Logic
 async function fetchData() {
-  membersState.loading = true;
   showLoading();
-
   try {
-    const { data, error } = await supabaseClient
-      .from('prm_members')
-      .select('*');
-
+    const { data, error } = await supabaseClient.from('prm_members').select('*');
     if (error) throw error;
-
     membersState.allData = data || [];
     populateTeamFilter();
     applyFilters();
+  } catch (e) { document.getElementById('errorAlert').textContent = e.message; }
+  finally { hideLoading(); }
+}
 
-    showSuccess(`Loaded ${membersState.allData.length} members`);
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    showError('Failed to load members data: ' + error.message);
-  } finally {
-    membersState.loading = false;
-    hideLoading();
+function populateTeamFilter() {
+  const teams = [...new Set(membersState.allData.map(r => String(r.team || r.preferred_team || '').trim()))].filter(Boolean);
+  const select = document.getElementById('teamFilter');
+  teams.sort().forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = t;
+    select.appendChild(opt);
+  });
+}
+
+function setupEventListeners() {
+  document.getElementById('searchInput').oninput = (e) => { membersState.searchTerm = e.target.value; applyFilters(); };
+  document.getElementById('teamFilter').onchange = (e) => { membersState.teamFilter = e.target.value; applyFilters(); };
+  document.getElementById('modalOverlay').onclick = closeModal;
+  
+  const menuToggle = document.getElementById('menuToggle');
+  if (menuToggle) {
+    menuToggle.onclick = () => {
+      document.getElementById('sidebar').classList.remove('-translate-x-full');
+      document.getElementById('menuOverlay').classList.remove('hidden');
+    };
   }
 }
 
-// Initialize
+function showLoading() { document.getElementById('loadingIndicator').classList.remove('hidden'); }
+function hideLoading() { document.getElementById('loadingIndicator').classList.add('hidden'); }
+
+function downloadCSV() {
+  const cols = Object.keys(membersState.filteredData[0]).filter(c => c !== 'photo' && c !== 'id');
+  let csv = cols.join(',') + '\n' + membersState.filteredData.map(row => cols.map(c => `"${String(row[c] || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'members.csv'; a.click();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  setupMenuEventListeners();
   setupEventListeners();
   fetchData();
 });

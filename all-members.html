@@ -7,20 +7,16 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* Modern UX: Smooth scrolling and touch optimization */
     body { -webkit-tap-highlight-color: transparent; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .table-responsive-container { -webkit-overflow-scrolling: touch; overflow-x: auto; }
+    @media (min-width: 768px) { .main-content { margin-left: 16rem; } }
     
-    /* Responsive Table Container */
-    .table-responsive-container {
-      -webkit-overflow-scrolling: touch;
-      overflow-x: auto;
-    }
-
-    @media (min-width: 768px) {
-      .main-content { margin-left: 16rem; }
-    }
+    /* Smooth Modal Transitions */
+    #memberModal.hidden { display: none; }
+    #memberModal { display: flex; opacity: 1; transition: opacity 0.2s ease; }
+    #memberModal.hidden { opacity: 0; pointer-events: none; }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -32,117 +28,76 @@
         <h2 class="text-xl font-bold tracking-tight">PRM Admin</h2>
       </div>
       <nav class="space-y-1">
-        <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition text-gray-300">
-          <span>📊</span> Dashboard
-        </a>
-        <a href="core-team.html" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition text-gray-300">
-          <span>👥</span> Core Team
-        </a>
-        <a href="all-members.html" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white transition font-medium">
-          <span>👨‍💼</span> All Members
-        </a>
-        <a href="recruitment.html" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition text-gray-300">
-          <span>📋</span> Recruitment
-        </a>
+        <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition text-gray-300"><span>📊</span> Dashboard</a>
+        <a href="core-team.html" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition text-gray-300"><span>👥</span> Core Team</a>
+        <a href="all-members.html" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white transition font-medium"><span>👨‍💼</span> All Members</a>
+        <a href="recruitment.html" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition text-gray-300"><span>📋</span> Recruitment</a>
       </nav>
     </div>
   </aside>
 
-  <div id="menuOverlay" class="fixed inset-0 bg-black/50 hidden z-40 transition-opacity"></div>
+  <div id="menuOverlay" class="fixed inset-0 bg-black/50 hidden z-40"></div>
 
   <div class="main-content flex flex-col min-h-screen pb-24 md:pb-0">
-    
     <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 md:px-8 py-3 sm:py-4">
       <div class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <button id="menuToggle" class="md:hidden p-2 hover:bg-gray-100 rounded-lg transition" aria-label="Toggle Menu">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          <button id="menuToggle" class="md:hidden p-2 hover:bg-gray-100 rounded-lg transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </button>
-          <h1 class="text-xl md:text-2xl font-bold text-gray-900">All Members</h1>
+          <h1 class="text-xl md:text-2xl font-bold text-gray-900">Member Directory</h1>
         </div>
-        <div class="md:hidden text-blue-600 font-bold">PRM</div>
       </div>
     </header>
 
     <main class="max-w-7xl mx-auto w-full p-4 md:p-8">
-      
-      <div id="loadingIndicator" class="hidden mb-4 p-4 bg-blue-50 border border-blue-200 rounded-2xl flex items-center gap-3 shadow-sm">
+      <div id="loadingIndicator" class="hidden mb-4 p-4 bg-blue-50 border border-blue-200 rounded-2xl flex items-center gap-3">
         <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        <span class="text-blue-700 font-medium text-sm">Syncing member data...</span>
+        <span class="text-blue-700 font-medium text-sm">Loading members...</span>
       </div>
-      <div id="errorAlert" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm shadow-sm"></div>
-      <div id="successAlert" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-2xl text-green-700 text-sm shadow-sm"></div>
+      <div id="errorAlert" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm"></div>
+      <div id="successAlert" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-2xl text-green-700 text-sm"></div>
 
       <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div class="p-4 md:p-6 border-b border-gray-100 space-y-4 bg-gray-50/30">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h2 class="text-lg font-bold text-gray-800">Member Directory</h2>
-            <button onclick="downloadCSV()" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95">
-              <span>📥</span> Download CSV
-            </button>
-          </div>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="relative group">
-              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">🔍</span>
-              <input 
-                type="text" 
-                id="searchInput"
-                placeholder="Search by name, email, or team..."
-                class="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm transition"
-              >
+          <div class="flex flex-col md:flex-row justify-between gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+              <input type="text" id="searchInput" placeholder="Search members..." class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+              <select id="teamFilter" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl outline-none text-sm cursor-pointer">
+                <option value="">All Teams</option>
+              </select>
             </div>
-            <select 
-              id="teamFilter"
-              class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-sm transition cursor-pointer"
-            >
-              <option value="">All Teams</option>
-            </select>
+            <button onclick="downloadCSV()" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold transition shadow-sm">📥 Export CSV</button>
           </div>
         </div>
 
         <div class="table-responsive-container">
-          <div id="tableContainer">
-            </div>
+          <div id="tableContainer"></div>
         </div>
       </div>
     </main>
+  </div>
 
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-200 px-4 py-3 flex justify-between items-center z-50">
-      <a href="index.html" class="flex flex-col items-center gap-1.5 text-gray-400 hover:text-blue-600 transition min-w-[64px]">
-        <span class="text-xl">📊</span>
-        <span class="text-[10px] font-bold uppercase tracking-widest">Dash</span>
-      </a>
-      <a href="core-team.html" class="flex flex-col items-center gap-1.5 text-gray-400 hover:text-blue-600 transition min-w-[64px]">
-        <span class="text-xl">👥</span>
-        <span class="text-[10px] font-bold uppercase tracking-widest">Team</span>
-      </a>
-      <a href="all-members.html" class="flex flex-col items-center gap-1.5 text-blue-600 transition min-w-[64px]">
-        <span class="text-xl">👨‍💼</span>
-        <span class="text-[10px] font-bold uppercase tracking-widest">All</span>
-      </a>
-      <a href="recruitment.html" class="flex flex-col items-center gap-1.5 text-gray-400 hover:text-blue-600 transition min-w-[64px]">
-        <span class="text-xl">📋</span>
-        <span class="text-[10px] font-bold uppercase tracking-widest">Recruit</span>
-      </a>
-    </nav>
+  <div id="memberModal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4">
+    <div id="modalOverlay" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
+    <div class="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden transform transition-all">
+      <button onclick="closeModal()" class="absolute right-4 top-4 z-10 p-2 bg-white/80 hover:bg-white rounded-full shadow-md">
+        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      <div class="flex flex-col md:flex-row">
+        <div class="w-full md:w-2/5 bg-gray-50 flex items-center justify-center p-8 border-b md:border-b-0 md:border-r border-gray-100">
+          <div id="modalPhotoContainer" class="w-48 h-48 md:w-full md:h-64 rounded-2xl overflow-hidden shadow-lg border-4 border-white"></div>
+        </div>
+        <div class="w-full md:w-3/5 p-6 md:p-8">
+          <h3 id="modalMemberName" class="text-2xl font-bold text-gray-900 mb-1"></h3>
+          <p id="modalMemberSubtitle" class="text-blue-600 font-semibold mb-6 uppercase text-xs tracking-widest"></p>
+          <div id="modalDetailsGrid" class="grid grid-cols-1 gap-4 max-h-[350px] overflow-y-auto no-scrollbar pr-2"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="js/supabase.js"></script>
   <script src="js/all-members.js"></script>
-  <script>
-    // UX Helper for Sidebar Navigation
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('menuOverlay');
-
-    const toggleSidebar = (show) => {
-      sidebar.classList.toggle('-translate-x-full', !show);
-      overlay.classList.toggle('hidden', !show);
-    };
-
-    if (menuToggle) menuToggle.onclick = () => toggleSidebar(true);
-    if (overlay) overlay.onclick = () => toggleSidebar(false);
-  </script>
 </body>
 </html>
