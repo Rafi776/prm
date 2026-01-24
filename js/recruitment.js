@@ -18,13 +18,15 @@ function getStatusClass(status) {
       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     case 'Failed':
       return 'bg-red-100 text-red-800 border-red-200';
+    case 'In Progress':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
     default:
       return 'bg-gray-100 text-gray-600 border-gray-200';
   }
 }
 
 function setActiveTab(tab) {
-  ['recruitment','selected','failed','waiting'].forEach(t => {
+  ['recruitment','selected','inProgress','failed','waiting'].forEach(t => {
     const btn = document.getElementById(`${t}Tab`);
     if (!btn) return;
     btn.classList.remove('active', 'text-blue-600', 'shadow-sm', 'bg-white');
@@ -89,6 +91,7 @@ function setupMenuEventListeners() {
 function setupTabListeners() {
   document.getElementById('recruitmentTab').onclick = () => switchTab('recruitment');
   document.getElementById('selectedTab').onclick = () => switchTab('selected');
+  document.getElementById('inProgressTab').onclick = () => switchTab('inProgress');
   document.getElementById('failedTab').onclick = () => switchTab('failed');
   document.getElementById('waitingTab').onclick = () => switchTab('waiting');
 }
@@ -96,7 +99,7 @@ function setupTabListeners() {
 function switchTab(tab) {
   recruitmentState.currentTab = tab;
 
-  ['recruitment','selected','failed','waiting'].forEach(t => {
+  ['recruitment','selected','inProgress','failed','waiting'].forEach(t => {
     document.getElementById(`${t}Content`)?.classList.add('hidden');
   });
   document.getElementById(`${tab}Content`)?.classList.remove('hidden');
@@ -131,7 +134,13 @@ function renderFilteredData(tab) {
   let data = recruitmentState.allData;
 
   if (tab !== 'recruitment') {
-    data = data.filter(r => r.status === tab.charAt(0).toUpperCase() + tab.slice(1));
+    const statusMap = {
+      'selected': 'Selected',
+      'inProgress': 'In Progress',
+      'failed': 'Failed',
+      'waiting': 'Waiting'
+    };
+    data = data.filter(r => r.status === statusMap[tab]);
   }
 
   const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
@@ -218,6 +227,7 @@ html += `<tr onclick='window.showPRMModal(${JSON.stringify(row).replace(/'/g, "&
                 data-id="${row.id}">
           <option value="NULL" ${!row.status ? 'selected' : ''}>Not Set</option>
           <option value="Waiting" ${row.status==='Waiting'?'selected':''}>Waiting</option>
+          <option value="In Progress" ${row.status==='In Progress'?'selected':''}>In Progress</option>
           <option value="Selected" ${row.status==='Selected'?'selected':''}>Selected</option>
           <option value="Failed" ${row.status==='Failed'?'selected':''}>Failed</option>
         </select>
@@ -268,7 +278,13 @@ async function handleStatusChange(e) {
 function downloadCSV(tab) {
   let data = recruitmentState.allData;
   if (tab !== 'recruitment') {
-    data = data.filter(r => r.status === tab.charAt(0).toUpperCase() + tab.slice(1));
+    const statusMap = {
+      'selected': 'Selected',
+      'inProgress': 'In Progress',
+      'failed': 'Failed',
+      'waiting': 'Waiting'
+    };
+    data = data.filter(r => r.status === statusMap[tab]);
   }
   if (!data.length) return alert('No data');
 

@@ -64,6 +64,9 @@
         <a href="recruitment.html" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 text-white transition font-medium">
           <span>📋</span> Recruitment
         </a>
+        <a href="waiting-room.html" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition text-gray-300">
+          <span>🎥</span> Waiting Room
+        </a>
         <a href="join.html" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition text-gray-300">
           <span>🚀</span> Join Us
         </a>
@@ -105,6 +108,11 @@
   Selected
 </button>
 
+<button id="inProgressTab"
+  class="recruitment-tab px-6 py-2.5 rounded-lg text-sm font-semibold text-gray-600">
+  In Progress
+</button>
+
 <button id="failedTab"
   class="recruitment-tab px-6 py-2.5 rounded-lg text-sm font-semibold text-gray-600">
   Failed
@@ -144,6 +152,9 @@
         </div>
         <div id="selectedContent" class="hidden table-responsive-container">
            <div id="selectedTableContainer"></div>
+        </div>
+        <div id="inProgressContent" class="hidden table-responsive-container">
+           <div id="inProgressTableContainer"></div>
         </div>
         <div id="failedContent" class="hidden table-responsive-container">
            <div id="failedTableContainer"></div>
