@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Meeting Waiting Room - PRM Admin</title>
+  <title>Meeting Waiting Room - PR Marketing & ICT Taskforce - Bangladesh Scouts Rover Region</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -50,6 +50,90 @@
       50% { transform: translateY(-10px); }
     }
     
+    /* Auto-slide carousel */
+    .carousel-container {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .carousel-track {
+      display: flex;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .carousel-slide {
+      min-width: 100%;
+      flex-shrink: 0;
+    }
+    
+    /* Progress indicators */
+    .slide-indicators {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 1rem;
+    }
+    
+    .slide-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .slide-indicator.active {
+      background: #ffffff;
+      transform: scale(1.2);
+    }
+    
+    /* Countdown timer */
+    .countdown-ring {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: conic-gradient(#ef4444 0deg, rgba(255,255,255,0.2) 0deg);
+      transition: background 0.1s linear;
+    }
+    
+    /* Fun animations for engagement */
+    .bounce-in {
+      animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    @keyframes bounceIn {
+      0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+      50% { transform: scale(1.05) rotate(5deg); }
+      70% { transform: scale(0.9) rotate(-2deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    
+    /* Sparkle animation */
+    .sparkle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #fbbf24;
+      border-radius: 50%;
+      animation: sparkle 2s infinite;
+    }
+    
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; transform: scale(0); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+    
+    /* Motivational quotes animation */
+    .quote-fade {
+      animation: quoteFade 8s infinite;
+    }
+    
+    @keyframes quoteFade {
+      0%, 90%, 100% { opacity: 0; transform: translateY(20px); }
+      10%, 80% { opacity: 1; transform: translateY(0); }
+    }
+    
     /* Full screen presentation mode */
     .presentation-mode {
       background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
@@ -67,7 +151,15 @@
 
   <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-gray-900 text-white transform -translate-x-full transition-transform duration-300 ease-in-out z-50">
     <div class="p-6">
-      <div class="flex items-center gap-3 mb-10"><div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold">P</div><h2 class="text-xl font-bold">PRM Admin</h2></div>
+      <div class="flex items-center gap-3 mb-10">
+        <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-green-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg">
+          <span class="text-lg">🏕️</span>
+        </div>
+        <div>
+          <h2 class="text-lg font-bold leading-tight">PRM Admin</h2>
+          <p class="text-xs text-gray-400 leading-tight">Bangladesh Scouts Rover Region</p>
+        </div>
+      </div>
       <nav class="space-y-1">
         <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition text-gray-300"><span>📊</span> Dashboard</a>
         <a href="core-team.html" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition text-gray-300"><span>👥</span> Core Team</a>
@@ -99,8 +191,8 @@
             <span class="text-white font-bold text-lg">🎥</span>
           </div>
           <div>
-            <h1 class="text-2xl font-bold text-white">PR Marketing & ICT Taskforce Session</h1>
-            <p class="text-white/80 text-sm">Live Interview Monitor</p>
+            <h1 class="text-2xl font-bold text-white">PR Marketing & ICT Taskforce</h1>
+            <p class="text-white/80 text-sm">Bangladesh Scouts Rover Region - Live Interview Monitor</p>
           </div>
         </div>
       </div>
@@ -110,59 +202,89 @@
       </div>
     </header>
 
-    <main class="flex-1 p-6 md:p-12">
-      <div id="loadingIndicator" class="hidden p-6 bg-white/10 backdrop-blur-md text-white rounded-2xl mb-8 animate-pulse text-center">
-        <div class="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <span class="text-lg font-medium">Loading interview sessions...</span>
+    <main class="flex-1 p-3 md:p-6">
+      <div id="loadingIndicator" class="hidden p-4 bg-white/10 backdrop-blur-md text-white rounded-2xl mb-4 animate-pulse text-center">
+        <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+        <span class="text-sm font-medium">Loading interview sessions...</span>
       </div>
       
       <!-- Current Viva Section -->
-      <div class="mb-12">
-        <div class="text-center mb-8">
-          <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">Current Viva is going on:</h2>
-          <div class="w-24 h-1 bg-gradient-to-r from-red-500 to-orange-500 mx-auto rounded-full"></div>
+      <div class="mb-6">
+        <div class="text-center mb-4">
+          <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">Current Viva is going on:</h2>
+          <div class="w-16 h-1 bg-gradient-to-r from-red-500 to-orange-500 mx-auto rounded-full"></div>
         </div>
 
-        <!-- Active Sessions Container -->
-        <div id="activeSessionsContainer">
+        <!-- Active Sessions Container with Carousel -->
+        <div id="activeSessionsContainer" class="carousel-container">
           <!-- This will be populated by JavaScript -->
+        </div>
+        
+        <!-- Slide indicators -->
+        <div id="slideIndicators" class="slide-indicators hidden">
+          <!-- Populated by JavaScript -->
+        </div>
+        
+        <!-- Next slide countdown -->
+        <div id="slideCountdown" class="hidden flex justify-center items-center mt-4">
+          <div class="flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2">
+            <div class="countdown-ring flex items-center justify-center">
+              <span id="countdownText" class="text-white font-bold text-sm">5</span>
+            </div>
+            <div class="text-white">
+              <p class="font-bold text-sm">Next Candidate</p>
+              <p class="text-xs opacity-80">Auto-switching in <span id="countdownSeconds">5</span>s</p>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Empty State -->
-      <div id="emptyState" class="hidden text-center py-20">
-        <div class="float-animation mb-8">
-          <div class="w-32 h-32 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center mx-auto">
-            <span class="text-6xl">😴</span>
+      <div id="emptyState" class="hidden text-center py-8">
+        <div class="float-animation mb-6">
+          <div class="w-24 h-24 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center mx-auto relative">
+            <span class="text-4xl">😴</span>
+            <!-- Sparkle effects -->
+            <div class="sparkle" style="top: 10%; left: 20%; animation-delay: 0s;"></div>
+            <div class="sparkle" style="top: 80%; right: 15%; animation-delay: 0.5s;"></div>
+            <div class="sparkle" style="bottom: 20%; left: 70%; animation-delay: 1s;"></div>
           </div>
         </div>
-        <h3 class="text-3xl font-bold text-white mb-4">No Active Interview Sessions</h3>
-        <p class="text-white/80 max-w-2xl mx-auto text-lg mb-8">
-          When candidates are being interviewed, they will appear here in a large, focused display.
+        <h3 class="text-2xl font-bold text-white mb-3">No Active Interview Sessions</h3>
+        <p class="text-white/80 max-w-xl mx-auto text-base mb-6">
+          When candidates are being interviewed, they will appear here with auto-slide presentation.
         </p>
-        <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 max-w-2xl mx-auto mb-8">
-          <h4 class="font-bold text-white text-xl mb-4">How to start an interview session:</h4>
-          <ol class="text-white/90 space-y-2 text-left text-lg">
-            <li class="flex items-center gap-3">
-              <span class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">1</span>
+        
+        <!-- Motivational quotes -->
+        <div class="mb-6 h-12 flex items-center justify-center">
+          <div id="motivationalQuote" class="quote-fade text-white/70 text-base italic max-w-lg mx-auto">
+            "Great things never come from comfort zones."
+          </div>
+        </div>
+        
+        <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 max-w-xl mx-auto mb-6">
+          <h4 class="font-bold text-white text-lg mb-3">How to start an interview session:</h4>
+          <ol class="text-white/90 space-y-2 text-left text-sm">
+            <li class="flex items-center gap-2">
+              <span class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs">1</span>
               Go to the <strong>Recruitment</strong> page
             </li>
-            <li class="flex items-center gap-3">
-              <span class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">2</span>
+            <li class="flex items-center gap-2">
+              <span class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs">2</span>
               Find the candidate to interview
             </li>
-            <li class="flex items-center gap-3">
-              <span class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">3</span>
+            <li class="flex items-center gap-2">
+              <span class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs">3</span>
               Change their status to <strong>"In Progress"</strong>
             </li>
-            <li class="flex items-center gap-3">
-              <span class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm">✓</span>
-              They will appear here immediately
+            <li class="flex items-center gap-2">
+              <span class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xs">✓</span>
+              They will appear here with auto-slide presentation
             </li>
           </ol>
         </div>
-        <div class="mt-8">
-          <a href="recruitment.html" class="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-lg transition-colors shadow-lg">
+        <div class="mt-4">
+          <a href="recruitment.html" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-colors shadow-lg bounce-in">
             <span>📋</span>
             Go to Recruitment
           </a>

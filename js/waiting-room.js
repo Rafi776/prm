@@ -1,8 +1,23 @@
-// Waiting Room JavaScript
+// Waiting Room JavaScript with Auto-Slide Functionality
 const waitingRoomState = {
   inProgressCandidates: [],
   loading: false,
-  refreshInterval: null
+  refreshInterval: null,
+  slideInterval: null,
+  currentSlide: 0,
+  slideCountdown: null,
+  countdownValue: 5,
+  motivationalQuotes: [
+    "Great things never come from comfort zones.",
+    "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+    "The future belongs to those who believe in the beauty of their dreams.",
+    "It is during our darkest moments that we must focus to see the light.",
+    "Believe you can and you're halfway there.",
+    "The only impossible journey is the one you never begin.",
+    "In the middle of difficulty lies opportunity.",
+    "Success is walking from failure to failure with no loss of enthusiasm."
+  ],
+  currentQuoteIndex: 0
 };
 
 // Helper: Convert Google Drive link to direct image
@@ -65,22 +80,41 @@ async function fetchInProgressCandidates() {
   }
 }
 
-// Render active interview sessions
+// Render active interview sessions with carousel
 function renderActiveSessions() {
   const container = document.getElementById('activeSessionsContainer');
   const emptyState = document.getElementById('emptyState');
+  const slideIndicators = document.getElementById('slideIndicators');
+  const slideCountdown = document.getElementById('slideCountdown');
   const candidates = waitingRoomState.inProgressCandidates;
   
   if (candidates.length === 0) {
     container.innerHTML = '';
     emptyState.classList.remove('hidden');
+    slideIndicators.classList.add('hidden');
+    slideCountdown.classList.add('hidden');
+    stopSlideshow();
+    startMotivationalQuotes();
     return;
   }
   
   emptyState.classList.add('hidden');
+  stopMotivationalQuotes();
   
-  // Create large, focused display for each candidate
-  let html = '';
+  // Show indicators and countdown only if multiple candidates
+  if (candidates.length > 1) {
+    slideIndicators.classList.remove('hidden');
+    slideCountdown.classList.remove('hidden');
+    renderSlideIndicators();
+    startSlideshow();
+  } else {
+    slideIndicators.classList.add('hidden');
+    slideCountdown.classList.add('hidden');
+    stopSlideshow();
+  }
+  
+  // Create carousel structure
+  let carouselHtml = '<div class="carousel-track" id="carouselTrack">';
   
   candidates.forEach((candidate, index) => {
     const candidateName = candidate.name || candidate.full_name || 'Unknown Candidate';
@@ -105,86 +139,251 @@ function renderActiveSessions() {
     
     console.log(`Candidate ${index + 1} photo URL:`, photoUrl);
     
-    html += `
-      <div class="candidate-display rounded-3xl p-12 mb-8 text-center relative overflow-hidden">
-        <!-- Animated background -->
-        <div class="absolute inset-0 gradient-border opacity-20"></div>
-        <div class="absolute inset-1 bg-white rounded-3xl"></div>
-        
-        <!-- Content -->
-        <div class="relative z-10">
-          <!-- Live indicator -->
-          <div class="flex justify-center mb-8">
-            <div class="flex items-center gap-3 px-6 py-3 bg-red-50 border-2 border-red-200 rounded-full">
-              <div class="w-4 h-4 bg-red-500 rounded-full live-pulse"></div>
-              <span class="text-lg font-bold text-red-700">INTERVIEW IN PROGRESS</span>
-            </div>
-          </div>
+    carouselHtml += `
+      <div class="carousel-slide">
+        <div class="candidate-display rounded-2xl p-6 mb-4 text-center relative overflow-hidden bounce-in">
+          <!-- Animated background -->
+          <div class="absolute inset-0 gradient-border opacity-20"></div>
+          <div class="absolute inset-1 bg-white rounded-2xl"></div>
           
-          <!-- Large photo -->
-          <div class="flex justify-center mb-8">
-            <div class="relative">
-              <div class="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-8 border-white shadow-2xl">
-                <img 
-                  src="${photoUrl}" 
-                  alt="${escapeHtml(candidateName)}"
-                  class="w-full h-full object-cover"
-                  onerror="console.error('Image failed to load:', this.src); this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(candidateName)}&background=3b82f6&color=fff&size=600&font-size=0.4'"
-                  onload="console.log('Image loaded successfully:', this.src)"
-                >
-              </div>
-              <!-- Live indicator on photo -->
-              <div class="absolute -bottom-2 -right-2 w-16 h-16 bg-red-500 border-4 border-white rounded-full flex items-center justify-center shadow-lg">
-                <span class="text-white text-2xl">🎥</span>
+          <!-- Sparkle effects -->
+          <div class="sparkle" style="top: 15%; left: 10%; animation-delay: 0s;"></div>
+          <div class="sparkle" style="top: 25%; right: 15%; animation-delay: 0.8s;"></div>
+          <div class="sparkle" style="bottom: 30%; left: 20%; animation-delay: 1.2s;"></div>
+          <div class="sparkle" style="bottom: 15%; right: 25%; animation-delay: 1.8s;"></div>
+          
+          <!-- Content -->
+          <div class="relative z-10">
+            <!-- Live indicator -->
+            <div class="flex justify-center mb-4">
+              <div class="flex items-center gap-2 px-4 py-2 bg-red-50 border-2 border-red-200 rounded-full">
+                <div class="w-3 h-3 bg-red-500 rounded-full live-pulse"></div>
+                <span class="text-sm font-bold text-red-700">INTERVIEW IN PROGRESS</span>
               </div>
             </div>
-          </div>
-          
-          <!-- Large candidate info -->
-          <div class="mb-8">
-            <h3 class="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
-              ${escapeHtml(candidateName)}
-            </h3>
-            <p class="text-2xl md:text-3xl text-blue-600 font-semibold mb-6">
-              ${escapeHtml(candidateUnit)}
-            </p>
             
-            <!-- Additional info if available -->
-            <div class="flex flex-wrap justify-center gap-4 text-lg text-gray-600">
-              ${candidate.email ? `
-                <div class="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full">
-                  <span>📧</span>
-                  <span>${escapeHtml(candidate.email)}</span>
+            <!-- Large photo -->
+            <div class="flex justify-center mb-4">
+              <div class="relative">
+                <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-xl">
+                  <img 
+                    src="${photoUrl}" 
+                    alt="${escapeHtml(candidateName)}"
+                    class="w-full h-full object-cover"
+                    onerror="console.error('Image failed to load:', this.src); this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(candidateName)}&background=3b82f6&color=fff&size=400&font-size=0.4'"
+                    onload="console.log('Image loaded successfully:', this.src)"
+                  >
                 </div>
-              ` : ''}
-              ${candidate.phone ? `
-                <div class="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full">
-                  <span>📱</span>
-                  <span>${escapeHtml(candidate.phone)}</span>
+                <!-- Live indicator on photo -->
+                <div class="absolute -bottom-1 -right-1 w-10 h-10 bg-red-500 border-2 border-white rounded-full flex items-center justify-center shadow-lg">
+                  <span class="text-white text-lg">🎥</span>
                 </div>
-              ` : ''}
-              ${candidate.university ? `
-                <div class="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full">
-                  <span>🎓</span>
-                  <span>${escapeHtml(candidate.university)}</span>
-                </div>
-              ` : ''}
+              </div>
             </div>
+            
+            <!-- Large candidate info -->
+            <div class="mb-4">
+              <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                ${escapeHtml(candidateName)}
+              </h3>
+              <p class="text-lg md:text-xl text-blue-600 font-semibold mb-4">
+                ${escapeHtml(candidateUnit)}
+              </p>
+              
+              <!-- Additional info if available -->
+              <div class="flex flex-wrap justify-center gap-2 text-sm text-gray-600">
+                ${candidate.email ? `
+                  <div class="flex items-center gap-1 bg-gray-50 px-3 py-1 rounded-full">
+                    <span>📧</span>
+                    <span>${escapeHtml(candidate.email)}</span>
+                  </div>
+                ` : ''}
+                ${candidate.phone ? `
+                  <div class="flex items-center gap-1 bg-gray-50 px-3 py-1 rounded-full">
+                    <span>📱</span>
+                    <span>${escapeHtml(candidate.phone)}</span>
+                  </div>
+                ` : ''}
+                ${candidate.university ? `
+                  <div class="flex items-center gap-1 bg-gray-50 px-3 py-1 rounded-full">
+                    <span>🎓</span>
+                    <span>${escapeHtml(candidate.university)}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+            
+            <!-- Action button -->
+            <button 
+              onclick="viewCandidateDetails(${index})"
+              class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-colors shadow-lg"
+            >
+              View Full Profile
+            </button>
           </div>
-          
-          <!-- Action button -->
-          <button 
-            onclick="viewCandidateDetails(${index})"
-            class="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-lg transition-colors shadow-lg"
-          >
-            View Full Profile
-          </button>
         </div>
       </div>
     `;
   });
   
-  container.innerHTML = html;
+  carouselHtml += '</div>';
+  container.innerHTML = carouselHtml;
+  
+  // Reset to first slide
+  waitingRoomState.currentSlide = 0;
+  updateCarouselPosition();
+}
+
+// Carousel and slideshow functions
+function renderSlideIndicators() {
+  const indicatorsContainer = document.getElementById('slideIndicators');
+  const candidates = waitingRoomState.inProgressCandidates;
+  
+  let indicatorsHtml = '';
+  candidates.forEach((_, index) => {
+    indicatorsHtml += `
+      <div class="slide-indicator ${index === waitingRoomState.currentSlide ? 'active' : ''}" 
+           onclick="goToSlide(${index})">
+      </div>
+    `;
+  });
+  
+  indicatorsContainer.innerHTML = indicatorsHtml;
+}
+
+function updateCarouselPosition() {
+  const track = document.getElementById('carouselTrack');
+  if (track) {
+    const translateX = -waitingRoomState.currentSlide * 100;
+    track.style.transform = `translateX(${translateX}%)`;
+  }
+  
+  // Update indicators
+  const indicators = document.querySelectorAll('.slide-indicator');
+  indicators.forEach((indicator, index) => {
+    indicator.classList.toggle('active', index === waitingRoomState.currentSlide);
+  });
+}
+
+function goToSlide(slideIndex) {
+  waitingRoomState.currentSlide = slideIndex;
+  updateCarouselPosition();
+  resetSlideCountdown();
+}
+
+function nextSlide() {
+  const candidates = waitingRoomState.inProgressCandidates;
+  if (candidates.length <= 1) return;
+  
+  waitingRoomState.currentSlide = (waitingRoomState.currentSlide + 1) % candidates.length;
+  updateCarouselPosition();
+  resetSlideCountdown();
+}
+
+function startSlideshow() {
+  stopSlideshow(); // Clear any existing interval
+  
+  const candidates = waitingRoomState.inProgressCandidates;
+  if (candidates.length <= 1) return;
+  
+  // Start the 5-second auto-slide
+  waitingRoomState.slideInterval = setInterval(() => {
+    nextSlide();
+  }, 5000);
+  
+  // Start countdown
+  startSlideCountdown();
+}
+
+function stopSlideshow() {
+  if (waitingRoomState.slideInterval) {
+    clearInterval(waitingRoomState.slideInterval);
+    waitingRoomState.slideInterval = null;
+  }
+  stopSlideCountdown();
+}
+
+function startSlideCountdown() {
+  stopSlideCountdown(); // Clear any existing countdown
+  
+  waitingRoomState.countdownValue = 5;
+  updateCountdownDisplay();
+  
+  waitingRoomState.slideCountdown = setInterval(() => {
+    waitingRoomState.countdownValue--;
+    updateCountdownDisplay();
+    
+    if (waitingRoomState.countdownValue <= 0) {
+      resetSlideCountdown();
+    }
+  }, 1000);
+}
+
+function stopSlideCountdown() {
+  if (waitingRoomState.slideCountdown) {
+    clearInterval(waitingRoomState.slideCountdown);
+    waitingRoomState.slideCountdown = null;
+  }
+}
+
+function resetSlideCountdown() {
+  waitingRoomState.countdownValue = 5;
+  updateCountdownDisplay();
+}
+
+function updateCountdownDisplay() {
+  const countdownText = document.getElementById('countdownText');
+  const countdownSeconds = document.getElementById('countdownSeconds');
+  const countdownRing = document.querySelector('.countdown-ring');
+  
+  if (countdownText) countdownText.textContent = waitingRoomState.countdownValue;
+  if (countdownSeconds) countdownSeconds.textContent = waitingRoomState.countdownValue;
+  
+  // Update ring progress
+  if (countdownRing) {
+    const progress = ((5 - waitingRoomState.countdownValue) / 5) * 360;
+    countdownRing.style.background = `conic-gradient(#ef4444 ${progress}deg, rgba(255,255,255,0.2) ${progress}deg)`;
+  }
+}
+
+// Motivational quotes for engagement
+function startMotivationalQuotes() {
+  const quoteElement = document.getElementById('motivationalQuote');
+  if (!quoteElement) return;
+  
+  // Show first quote
+  showNextQuote();
+  
+  // Change quote every 8 seconds
+  waitingRoomState.quoteInterval = setInterval(() => {
+    showNextQuote();
+  }, 8000);
+}
+
+function stopMotivationalQuotes() {
+  if (waitingRoomState.quoteInterval) {
+    clearInterval(waitingRoomState.quoteInterval);
+    waitingRoomState.quoteInterval = null;
+  }
+}
+
+function showNextQuote() {
+  const quoteElement = document.getElementById('motivationalQuote');
+  if (!quoteElement) return;
+  
+  const quotes = waitingRoomState.motivationalQuotes;
+  waitingRoomState.currentQuoteIndex = (waitingRoomState.currentQuoteIndex + 1) % quotes.length;
+  
+  // Fade out
+  quoteElement.style.opacity = '0';
+  quoteElement.style.transform = 'translateY(20px)';
+  
+  setTimeout(() => {
+    quoteElement.textContent = quotes[waitingRoomState.currentQuoteIndex];
+    // Fade in
+    quoteElement.style.opacity = '1';
+    quoteElement.style.transform = 'translateY(0)';
+  }, 400);
 }
 
 // View candidate details in modal
@@ -348,13 +547,16 @@ function setupEventListeners() {
     };
   }
   
-  // Handle page visibility change to pause/resume auto-refresh
+  // Handle page visibility change to pause/resume auto-refresh and slideshow
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       stopAutoRefresh();
+      stopSlideshow();
+      stopMotivationalQuotes();
     } else {
       startAutoRefresh();
       fetchInProgressCandidates(); // Immediate refresh when page becomes visible
+      // Slideshow will restart when renderActiveSessions is called
     }
   });
 }
@@ -369,4 +571,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {
   stopAutoRefresh();
+  stopSlideshow();
+  stopMotivationalQuotes();
 });

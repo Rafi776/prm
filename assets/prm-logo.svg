@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <!-- This is a placeholder for the actual logo -->
+  <!-- The actual logo should be saved as an image file -->
+  <rect width="900" height="600" fill="#f8f9fa"/>
+  <text x="450" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#333">
+    PRM Logo Placeholder
+  </text>
+</svg>
