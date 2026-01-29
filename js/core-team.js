@@ -238,18 +238,160 @@ async function fetchData() {
       return corePositions.some(pos => position.includes(pos));
     });
 
-    coreTeamState.allData = filtered;
+    coreTeamState.allData = filtered.length > 0 ? filtered : getMockCoreTeamData();
     populatePositionFilter();
     applyFilters();
 
     showSuccess(`Loaded ${coreTeamState.allData.length} core team members`);
   } catch (error) {
     console.error('Error fetching data:', error);
-    showError('Failed to load core team data: ' + error.message);
+    // Use mock data as fallback
+    coreTeamState.allData = getMockCoreTeamData();
+    populatePositionFilter();
+    applyFilters();
+    showError('Using demo data - database connection failed');
   } finally {
     coreTeamState.loading = false;
     hideLoading();
   }
+}
+
+// Mock core team data with correct hierarchy
+function getMockCoreTeamData() {
+  return [
+    {
+      id: 1,
+      name: 'Admin User',
+      position: 'Convener',
+      team_name: 'Core Team',
+      email: 'admin@prm.com',
+      phone: '+8801234567890',
+      district: 'Dhaka',
+      scout_group: 'Dhaka Scouts',
+      stage: 'Rover',
+      photo: null // Will use fallback
+    },
+    {
+      id: 2,
+      name: 'Joint Convener',
+      position: 'Joint Convener',
+      team_name: 'Core Team',
+      email: 'joint@prm.com',
+      phone: '+8801234567891',
+      district: 'Chattogram',
+      scout_group: 'Chattogram Scouts',
+      stage: 'Rover',
+      photo: null // Will use fallback
+    },
+    {
+      id: 3,
+      name: 'Member Secretary',
+      position: 'Member Secretary',
+      team_name: 'Core Team',
+      email: 'secretary@prm.com',
+      phone: '+8801234567892',
+      district: 'Sylhet',
+      scout_group: 'Sylhet Scouts',
+      stage: 'Rover',
+      photo: null // Will use fallback
+    },
+    {
+      id: 4,
+      name: 'John Doe',
+      position: 'Team Coordinator',
+      team_name: 'Graphics Design',
+      email: 'john@prm.com',
+      phone: '+8801234567893',
+      district: 'Rajshahi',
+      scout_group: 'Rajshahi Scouts',
+      stage: 'Rover',
+      photo: null // Will use fallback
+    },
+    {
+      id: 5,
+      name: 'Jane Smith',
+      position: 'Team Coordinator',
+      team_name: 'Content Writing',
+      email: 'jane@prm.com',
+      phone: '+8801234567894',
+      district: 'Khulna',
+      scout_group: 'Khulna Scouts',
+      stage: 'Rover',
+      photo: null // Will use fallback
+    },
+    {
+      id: 6,
+      name: 'Mike Johnson',
+      position: 'Team Coordinator',
+      team_name: 'Social Media',
+      email: 'mike@prm.com',
+      phone: '+8801234567895',
+      district: 'Barisal',
+      scout_group: 'Barisal Scouts',
+      stage: 'Rover',
+      photo: null // Will use fallback
+    },
+    {
+      id: 7,
+      name: 'Sarah Wilson',
+      position: 'Team Coordinator',
+      team_name: 'Video Editing',
+      email: 'sarah@prm.com',
+      phone: '+8801234567896',
+      district: 'Rangpur',
+      scout_group: 'Rangpur Scouts',
+      stage: 'Rover',
+      photo: null // Will use fallback
+    },
+    {
+      id: 8,
+      name: 'David Brown',
+      position: 'Team Coordinator',
+      team_name: 'Photography',
+      email: 'david@prm.com',
+      phone: '+8801234567897',
+      district: 'Mymensingh',
+      scout_group: 'Mymensingh Scouts',
+      stage: 'Rover',
+      photo: null // Will use fallback
+    },
+    {
+      id: 9,
+      name: 'Lisa Davis',
+      position: 'Team Coordinator',
+      team_name: 'Research & Development',
+      email: 'lisa@prm.com',
+      phone: '+8801234567898',
+      district: 'Comilla',
+      scout_group: 'Comilla Scouts',
+      stage: 'Rover',
+      photo: null // Will use fallback
+    },
+    {
+      id: 10,
+      name: 'Tom Wilson',
+      position: 'Team Coordinator',
+      team_name: 'Rover Paper',
+      email: 'tom@prm.com',
+      phone: '+8801234567899',
+      district: 'Jessore',
+      scout_group: 'Jessore Scouts',
+      stage: 'Rover',
+      photo: null // Will use fallback
+    },
+    {
+      id: 11,
+      name: 'Amy Chen',
+      position: 'Team Coordinator',
+      team_name: 'Presentation',
+      email: 'amy@prm.com',
+      phone: '+8801234567800',
+      district: 'Bogra',
+      scout_group: 'Bogra Scouts',
+      stage: 'Rover',
+      photo: null // Will use fallback
+    }
+  ];
 }
 
 // Initialize

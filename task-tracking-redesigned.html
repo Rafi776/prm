@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Task Tracking - PRM Project Management">
+  <meta name="theme-color" content="#ffffff">
+  
+  <title>Task Tracking - PRM Project Management</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    
+    /* Task priority colors */
+    .priority-high { @apply bg-red-100 text-red-800 border-red-200; }
+    .priority-medium { @apply bg-yellow-100 text-yellow-800 border-yellow-200; }
+    .priority-low { @apply bg-green-100 text-green-800 border-green-200; }
+    
+    /* Task status colors */
+    .status-pending { @apply bg-gray-100 text-gray-800 border-gray-200; }
+    .status-in_progress { @apply bg-blue-100 text-blue-800 border-blue-200; }
+    .status-completed { @apply bg-green-100 text-green-800 border-green-200; }
+    
+    /* Animation classes */
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .slide-up { animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Tab styles */
+    .tab-active { @apply bg-blue-600 text-white shadow-md; }
+    .tab-inactive { @apply bg-gray-100 text-gray-600 hover:bg-gray-200; }
+    
+    /* Import tab styles */
+    .import-tab-active { @apply bg-blue-600 text-white shadow-md; }
+    .import-tab-inactive { @apply bg-gray-100 text-gray-600 hover:bg-gray-200; }
+    
+    /* Modal backdrop */
+    .modal-backdrop { backdrop-filter: blur(8px); }
+    
+    /* Redesigned task card styles */
+    .task-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .task-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      border-color: #cbd5e1;
+    }
+    
+    .task-card.priority-high {
+      border-left: 4px solid #ef4444;
+    }
+    
+    .task-card.priority-medium {
+      border-left: 4px solid #f59e0b;
+    }
+    
+    .task-card.priority-low {
+      border-left: 4px solid #10b981;
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+  
+  <!-- Navigation Sidebar -->
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white/80 backdrop-blur-xl border-r border-white/20 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-xl">
+    <div class="p-6">
+      <!-- Logo Section -->
+      <div class="flex items-center gap-4 mb-8 p-4 rounded-2xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="window.location.href='dashboard-redesigned.html'">
+        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm cursor-pointer">
+          <span class="text-2xl">🏕️</span>
+        </div>
+        <div class="text-white cursor-pointer">
+          <h1 class="text-xl font-bold">PRM Dashboard</h1>
+          <p class="text-sm opacity-90">Bangladesh Scouts</p>
+        </div>
+      </div>
+      
+      <!-- Navigation Menu -->
+      <nav class="space-y-2">
+        <a href="dashboard-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="core-team-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">👑</span>
+          <span>Core Team</span>
+        </a>
+        <a href="all-members-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">👥</span>
+          <span>All Members</span>
+        </a>
+        <a href="recruitment-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📋</span>
+          <span>Recruitment</span>
+        </a>
+        <a href="task-tracking-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg">
+          <span class="text-lg">✅</span>
+          <span>Task Tracking</span>
+        </a>
+        <a href="submission-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📄</span>
+          <span>Submissions</span>
+        </a>
+        <a href="waiting-room-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">🎥</span>
+          <span>Waiting Room</span>
+        </a>
+        <a href="join-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">🚀</span>
+          <span>Join Us</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Mobile Menu Overlay -->
+  <div id="menuOverlay" class="fixed inset-0 bg-black/50 hidden z-40 lg:hidden"></div>
+
+  <!-- Main Content -->
+  <div class="lg:ml-72 min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-white/20 px-6 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+          <button id="menuToggle" class="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+          <div>
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Task Management
+            </h2>
+            <p class="text-gray-600" id="userContext">Loading user context...</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <!-- Action Buttons -->
+          <button id="createTaskBtn" class="hidden px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-green-700 transition-all shadow-lg">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              New Task
+            </span>
+          </button>
+          
+          <button id="bulkImportBtn" class="hidden px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+              </svg>
+              Import
+            </span>
+          </button>
+          
+          <button id="exportTasksBtn" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+              </svg>
+              Export
+            </span>
+          </button>
+          
+          <!-- Task Count Badge -->
+          <div class="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">
+            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            <span id="taskCount">0 Tasks</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="p-6 space-y-8">
+      
+      <!-- Loading Indicator -->
+      <div id="loadingIndicator" class="hidden p-4 bg-blue-50 text-blue-700 rounded-xl mb-4 animate-pulse text-center">
+        <div class="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+        <span class="font-medium">Loading tasks...</span>
+      </div>
+
+      <!-- Authentication Status Indicator -->
+      <div id="authStatus" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-800 text-sm">
+        <span class="font-medium">👀 View Mode:</span> You can view tasks and analytics. 
+        <button onclick="showAuthModal()" class="text-yellow-600 hover:text-yellow-800 underline font-medium">Login as admin</button> 
+        to enable task creation and management features.
+      </div>
+
+      <!-- Error Alert -->
+      <div id="errorAlert" class="hidden p-4 bg-red-50 text-red-700 rounded-xl mb-4 border border-red-200">
+        <div class="flex items-center gap-2">
+          <span>⚠️</span>
+          <span id="errorMessage">An error occurred</span>
+        </div>
+      </div>
+
+      <!-- Success Alert -->
+      <div id="successAlert" class="hidden p-4 bg-green-50 text-green-700 rounded-xl mb-4 border border-green-200">
+        <div class="flex items-center gap-2">
+          <span>✅</span>
+          <span id="successMessage">Operation successful</span>
+        </div>
+      </div>
+
+      <!-- Dashboard Stats -->
+      <section class="grid grid-cols-1 md:grid-cols-4 gap-6 animate-fade-in-up">
+        <div id="dashboardStats" class="contents">
+          <!-- Stats will be populated by JavaScript -->
+        </div>
+      </section>
+
+      <!-- Tabs Navigation -->
+      <section class="animate-fade-in-up stagger-1">
+        <div class="mb-6 overflow-x-auto">
+          <div class="flex gap-2 min-w-max">
+            <button class="tab-btn tab-active px-4 py-2 rounded-lg font-medium text-sm transition-colors" data-tab="all">
+              All Tasks
+            </button>
+            <button class="tab-btn tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-colors" data-tab="my-tasks">
+              My Tasks
+            </button>
+            <button class="tab-btn tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-colors" data-tab="team-tasks">
+              Team Tasks
+            </button>
+            <button class="tab-btn tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-colors" data-tab="analytics">
+              Analytics
+            </button>
+            <button class="tab-btn tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-colors" data-tab="leaderboard">
+              Leaderboard
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Filters -->
+      <section class="animate-fade-in-up stagger-2">
+        <div id="filtersSection" class="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-lg border border-white/20">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Status</label>
+              <select id="statusFilter" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Priority</label>
+              <select id="priorityFilter" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                <option value="">All Priority</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Team</label>
+              <select id="teamFilter" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                <option value="">All Teams</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Search</label>
+              <input type="text" id="searchInput" placeholder="Search tasks..." class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Content Sections -->
+      <section class="animate-fade-in-up stagger-3">
+        <div id="allTasksContent" class="tab-content">
+          <div id="tasksContainer" class="space-y-4">
+            <!-- Tasks will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <div id="myTasksContent" class="tab-content hidden">
+          <div id="myTasksContainer" class="space-y-4">
+            <!-- My tasks will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <div id="teamTasksContent" class="tab-content hidden">
+          <div id="teamTasksContainer" class="space-y-4">
+            <!-- Team tasks will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <div id="analyticsContent" class="tab-content hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/20 p-6 shadow-lg">
+              <h3 class="text-lg font-bold text-gray-900 mb-4">Team Performance</h3>
+              <div id="teamPerformanceChart" class="space-y-3">
+                <!-- Team performance will be populated by JavaScript -->
+              </div>
+            </div>
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/20 p-6 shadow-lg">
+              <h3 class="text-lg font-bold text-gray-900 mb-4">Member Performance</h3>
+              <div id="memberPerformanceChart" class="space-y-3">
+                <!-- Member performance will be populated by JavaScript -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="leaderboardContent" class="tab-content hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/20 p-6 shadow-lg">
+              <h3 class="text-lg font-bold text-gray-900 mb-4">Weekly Leaderboard</h3>
+              <div id="weeklyLeaderboard" class="space-y-3">
+                <!-- Weekly leaderboard will be populated by JavaScript -->
+              </div>
+            </div>
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/20 p-6 shadow-lg">
+              <h3 class="text-lg font-bold text-gray-900 mb-4">Monthly Leaderboard</h3>
+              <div id="monthlyLeaderboard" class="space-y-3">
+                <!-- Monthly leaderboard will be populated by JavaScript -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Create Task Modal -->
+  <div id="createTaskModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="absolute inset-0 bg-gray-900/60" onclick="closeCreateTaskModal()"></div>
+    <div class="relative bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl slide-up">
+      <div class="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <span class="text-white font-bold">✅</span>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">Create New Task</h3>
+            <p class="text-sm text-gray-600">Assign a task to team members</p>
+          </div>
+        </div>
+        <button onclick="closeCreateTaskModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+      </div>
+      <form id="createTaskForm" class="p-6 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Task Title *</label>
+            <input type="text" id="taskTitle" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Description</label>
+            <textarea id="taskDescription" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Team *</label>
+            <select id="taskTeam" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+              <option value="">Select Team</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Assign To *</label>
+            <select id="taskAssignTo" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+              <option value="">Select Member</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Priority</label>
+            <select id="taskPriority" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Points</label>
+            <input type="number" id="taskPoints" min="1" max="100" value="1" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Deadline</label>
+            <input type="date" id="taskDeadline" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+          </div>
+        </div>
+      </form>
+      <div class="p-6 bg-gray-50 border-t flex gap-3">
+        <button onclick="closeCreateTaskModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-bold transition-colors">Cancel</button>
+        <button onclick="createTask()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition-colors">Create Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Detail Modal -->
+  <div id="taskDetailModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="absolute inset-0 bg-gray-900/60" onclick="closeTaskDetailModal()"></div>
+    <div class="relative bg-white rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl slide-up max-h-[90vh] overflow-y-auto">
+      <div id="taskDetailContent">
+        <!-- Task detail content will be populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Import Modal -->
+  <div id="bulkImportModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="absolute inset-0 bg-gray-900/60" onclick="closeBulkImportModal()"></div>
+    <div class="relative bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl slide-up">
+      <div class="p-6 bg-gradient-to-r from-green-50 to-blue-50 border-b flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center">
+            <span class="text-white font-bold">📥</span>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">Import Tasks</h3>
+            <p class="text-sm text-gray-600">Add tasks manually or import from CSV/Excel file</p>
+          </div>
+        </div>
+        <button onclick="closeBulkImportModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+      </div>
+      
+      <!-- Import Tabs -->
+      <div class="border-b">
+        <div class="flex">
+          <button class="import-tab-btn import-tab-active px-6 py-3 font-medium text-sm border-b-2 border-blue-600 text-blue-600" data-tab="manual">
+            ✏️ Manual Entry
+          </button>
+          <button class="import-tab-btn import-tab-inactive px-6 py-3 font-medium text-sm text-gray-600 hover:text-gray-800" data-tab="file">
+            📄 File Import
+          </button>
+        </div>
+      </div>
+
+      <!-- Manual Entry Tab -->
+      <div id="manualImportContent" class="import-tab-content p-6">
+        <form id="manualTaskForm" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Task Title *</label>
+              <input type="text" id="manualTaskTitle" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Description</label>
+              <textarea id="manualTaskDescription" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Team *</label>
+              <select id="manualTaskTeam" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+                <option value="">Select Team</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Assign To *</label>
+              <select id="manualTaskAssignTo" required class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+                <option value="">Select Member</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Status</label>
+              <select id="manualTaskStatus" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Priority</label>
+              <select id="manualTaskPriority" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Points</label>
+              <input type="number" id="manualTaskPoints" min="1" max="100" value="1" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Deadline</label>
+              <input type="date" id="manualTaskDeadline" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+            </div>
+          </div>
+          <div class="flex gap-3 pt-4">
+            <button type="button" onclick="addManualTask()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition-colors">Add Task</button>
+            <button type="button" onclick="clearManualForm()" class="px-6 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-bold transition-colors">Clear</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- File Import Tab -->
+      <div id="fileImportContent" class="import-tab-content hidden p-6">
+        <div class="space-y-6">
+          <!-- File Upload Area -->
+          <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors">
+            <input type="file" id="taskFileInput" accept=".csv,.xlsx,.xls" class="hidden" onchange="handleFileUpload(event)">
+            <div id="fileUploadArea" onclick="document.getElementById('taskFileInput').click()" class="cursor-pointer">
+              <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="text-blue-600 text-2xl">📄</span>
+              </div>
+              <h3 class="text-lg font-bold text-gray-900 mb-2">Upload Task File</h3>
+              <p class="text-gray-600 mb-4">Drag and drop your CSV or Excel file here, or click to browse</p>
+              <p class="text-sm text-gray-500">Supported formats: .csv, .xlsx, .xls</p>
+            </div>
+            <div id="filePreview" class="hidden">
+              <div class="flex items-center justify-center gap-3 text-green-600">
+                <span class="text-xl">✅</span>
+                <div>
+                  <p class="font-bold" id="fileName"></p>
+                  <p class="text-sm" id="fileSize"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CSV Template Download -->
+          <div class="bg-blue-50 rounded-xl p-4 border border-blue-200">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="text-blue-600 text-xl">💡</span>
+              <h4 class="font-bold text-blue-900">Need a template?</h4>
+            </div>
+            <p class="text-blue-800 text-sm mb-3">Download our CSV template to ensure your file has the correct format.</p>
+            <button onclick="downloadTemplate()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm transition-colors">
+              📥 Download Template
+            </button>
+          </div>
+
+          <!-- File Preview Table -->
+          <div id="filePreviewTable" class="hidden">
+            <h4 class="font-bold text-gray-900 mb-3">File Preview</h4>
+            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                  <tr id="previewHeaders"></tr>
+                </thead>
+                <tbody id="previewRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Import Actions -->
+          <div class="flex gap-3">
+            <button id="importFileBtn" onclick="importFromFile()" disabled class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition-colors">
+              Import Tasks
+            </button>
+            <button onclick="clearFileImport()" class="px-6 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-bold transition-colors">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Change Modal -->
+  <div id="statusChangeModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="absolute inset-0 bg-gray-900/60" onclick="closeStatusChangeModal()"></div>
+    <div class="relative bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl slide-up">
+      <div class="p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-b flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center">
+            <span class="text-white font-bold">🔄</span>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">Change Task Status</h3>
+            <p class="text-sm text-gray-600" id="statusChangeTaskTitle">Update task progress</p>
+          </div>
+        </div>
+        <button onclick="closeStatusChangeModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+      </div>
+      <div class="p-6">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Current Status</label>
+            <div id="currentStatus" class="px-4 py-3 bg-gray-100 rounded-xl text-gray-700 font-medium"></div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">New Status</label>
+            <select id="newTaskStatus" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+              <option value="pending">📋 Pending</option>
+              <option value="in_progress">⏳ In Progress</option>
+              <option value="completed">✅ Completed</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Notes (Optional)</label>
+            <textarea id="statusChangeNotes" rows="3" placeholder="Add any notes about this status change..." class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="p-6 bg-gray-50 border-t flex gap-3">
+        <button onclick="closeStatusChangeModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-bold transition-colors">Cancel</button>
+        <button onclick="confirmStatusChange()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition-colors">Update Status</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authentication Modal -->
+  <div id="authModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-md"></div>
+    <div class="relative bg-white rounded-3xl p-8 w-full max-w-sm">
+      <h2 class="text-xl font-bold mb-6 text-center text-gray-800">Admin Access Required</h2>
+      <div class="space-y-4">
+        <input type="text" id="adminUser" placeholder="Username" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+        <input type="password" id="adminPass" placeholder="Password" class="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+      </div>
+      <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold mt-6 transition-colors">Login</button>
+      <button onclick="closeAuthModal()" class="w-full text-gray-400 hover:text-gray-600 mt-4 text-sm transition-colors">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Load Scripts -->
+  <script src="js/supabase.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/universal-auth.js"></script>
+  <script src="js/universal-ui.js"></script>
+  <script src="js/task-tracking-enhanced.js"></script>
+
+  <script>
+    // Ensure the redesigned page uses the TaskTrackingUI properly
+    document.addEventListener('DOMContentLoaded', () => {
+      // Wait for TaskTrackingUI to be initialized
+      const checkTaskUI = () => {
+        if (window.taskUI) {
+          console.log('TaskTrackingUI is available, ensuring proper integration');
+          
+          // Override the dashboard stats rendering to use redesigned layout
+          const originalRenderDashboardStats = window.taskUI.renderDashboardStats;
+          window.taskUI.renderDashboardStats = function(stats) {
+            const container = document.getElementById('dashboardStats');
+            if (!container || !stats) return;
+
+            const completionRate = stats.total_tasks > 0 ? 
+                Math.round((stats.total_completed / stats.total_tasks) * 100) : 0;
+
+            container.innerHTML = `
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <span class="text-2xl">📋</span>
+                        </div>
+                        <span class="text-sm opacity-75">Total</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-3xl font-bold">${stats.total_tasks || 0}</div>
+                        <div class="text-sm opacity-90">All Tasks</div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <span class="text-2xl">⏳</span>
+                        </div>
+                        <span class="text-sm opacity-75">Active</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-3xl font-bold">${(stats.total_in_progress || 0) + (stats.total_pending || 0)}</div>
+                        <div class="text-sm opacity-90">In Progress</div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <span class="text-2xl">✅</span>
+                        </div>
+                        <span class="text-sm opacity-75">Done</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-3xl font-bold">${stats.total_completed || 0}</div>
+                        <div class="text-sm opacity-90">Completed</div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <span class="text-2xl">🎯</span>
+                        </div>
+                        <span class="text-sm opacity-75">Progress</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-3xl font-bold">${completionRate}%</div>
+                        <div class="text-sm opacity-90">Completion</div>
+                    </div>
+                </div>
+            `;
+          };
+
+          // Override the task card rendering to use redesigned style
+          const originalRenderTaskCard = window.taskUI.renderTaskCard;
+          window.taskUI.renderTaskCard = function(task) {
+            const priorityClass = `priority-${task.priority}`;
+            const statusClass = `status-${task.status}`;
+            const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== 'completed';
+            
+            return `
+                <div class="task-card ${priorityClass} p-6 hover:shadow-lg transition-all duration-300 fade-in">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <h3 class="text-lg font-bold text-gray-900">${this.escapeHtml(task.title)}</h3>
+                                ${isOverdue ? '<span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-bold rounded-full border border-red-200 animate-pulse">OVERDUE</span>' : ''}
+                            </div>
+                            <p class="text-gray-600 text-sm mb-3">${this.escapeHtml(task.description || 'No description')}</p>
+                            <div class="flex items-center gap-4 text-sm text-gray-500">
+                                <span class="flex items-center gap-1">
+                                    <span>👥</span>
+                                    <span class="font-medium">${task.assigned_to_member?.team_name || 'Unknown Team'}</span>
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span>👤</span>
+                                    <span class="font-medium">${task.assigned_to_member?.name || 'Unknown'}</span>
+                                </span>
+                                ${task.deadline ? `<span class="flex items-center gap-1"><span>📅</span><span class="font-medium">${this.formatDate(task.deadline)}</span></span>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end gap-2">
+                            <span class="px-3 py-1 text-xs font-bold rounded-full border ${priorityClass}">
+                                ${task.priority.toUpperCase()}
+                            </span>
+                            <span class="px-3 py-1 text-xs font-bold rounded-full border ${statusClass}">
+                                ${task.status.replace('_', ' ').toUpperCase()}
+                            </span>
+                            <div class="flex items-center gap-1 text-sm font-bold text-purple-600">
+                                <span>🎯</span>
+                                <span>${task.points || 1} pts</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <span>Created by <span class="font-medium">${task.assigned_by_member?.name || 'Unknown'}</span></span>
+                            <span>•</span>
+                            <span>${this.formatRelativeTime(task.created_at)}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${this.checkSession() ? `
+                                <button onclick="taskUI.openStatusChangeModal(${task.id})" 
+                                        class="px-3 py-1 bg-purple-50 text-purple-600 text-xs font-bold rounded-lg hover:bg-purple-100 transition-colors">
+                                    🔄 Status
+                                </button>
+                            ` : ''}
+                            <button onclick="taskUI.viewTaskDetails(${task.id})" 
+                                    class="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-100 transition-colors">
+                                👁️ Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+          };
+
+          console.log('TaskTrackingUI integration complete for redesigned page');
+        } else {
+          // Retry after a short delay
+          setTimeout(checkTaskUI, 100);
+        }
+      };
+
+      // Start checking for TaskTrackingUI
+      setTimeout(checkTaskUI, 100);
+    });
+  </script>
+</body>
+</html>

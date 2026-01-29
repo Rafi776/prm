@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Recruitment - PRM Project Management">
+  <meta name="theme-color" content="#ffffff">
+  
+  <title>Recruitment - PRM Project Management</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Enhanced Recruitment Tabs UX */
+    .recruitment-tab {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border: 1px solid #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .recruitment-tab::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .recruitment-tab:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.15);
+      border-color: #cbd5e1;
+    }
+
+    .recruitment-tab:hover::before {
+      transform: scaleX(1);
+    }
+
+    .recruitment-tab.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #ffffff;
+      transform: translateY(-3px);
+      box-shadow: 0 25px 50px -12px rgba(102, 126, 234, 0.4);
+      border-color: transparent;
+    }
+
+    .recruitment-tab.active::before {
+      transform: scaleX(1);
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Enhanced Table responsive container */
+    .table-responsive-container {
+      -webkit-overflow-scrolling: touch;
+      overflow-x: auto;
+    }
+    
+    /* Enhanced candidate cards */
+    .candidate-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .candidate-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+    
+    .candidate-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+      border-color: #cbd5e1;
+    }
+    
+    /* Status badges */
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .status-selected { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+    .status-in-progress { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+    .status-failed { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+    .status-waiting { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+    .status-pending { background: linear-gradient(135deg, #6b7280, #4b5563); color: white; }
+    .status-in_progress { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+    
+    /* Floating animation for stats */
+    .float-animation {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+    
+    /* Enhanced modal animations */
+    .modal-slide-up { animation: modalSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    @keyframes modalSlideUp { 
+      from { opacity: 0; transform: translateY(30px) scale(0.95); } 
+      to { opacity: 1; transform: translateY(0) scale(1); } 
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+  
+  <!-- Navigation Sidebar -->
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white/80 backdrop-blur-xl border-r border-white/20 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-xl">
+    <div class="p-6">
+      <!-- Logo Section -->
+      <div class="flex items-center gap-4 mb-8 p-4 rounded-2xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="window.location.href='dashboard-redesigned.html'">
+        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm cursor-pointer">
+          <span class="text-2xl">🏕️</span>
+        </div>
+        <div class="text-white cursor-pointer">
+          <h1 class="text-xl font-bold">PRM Dashboard</h1>
+          <p class="text-sm opacity-90">Bangladesh Scouts</p>
+        </div>
+      </div>
+      
+      <!-- Navigation Menu -->
+      <nav class="space-y-2">
+        <a href="dashboard-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="core-team-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">👑</span>
+          <span>Core Team</span>
+        </a>
+        <a href="all-members-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">👥</span>
+          <span>All Members</span>
+        </a>
+        <a href="recruitment-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg">
+          <span class="text-lg">📋</span>
+          <span>Recruitment</span>
+        </a>
+        <a href="task-tracking-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">✅</span>
+          <span>Task Tracking</span>
+        </a>
+        <a href="submission-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📄</span>
+          <span>Submissions</span>
+        </a>
+        <a href="waiting-room-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">🎥</span>
+          <span>Waiting Room</span>
+        </a>
+        <a href="join-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">🚀</span>
+          <span>Join Us</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Mobile Menu Overlay -->
+  <div id="menuOverlay" class="fixed inset-0 bg-black/50 hidden z-40 lg:hidden"></div>
+
+  <!-- Main Content -->
+  <div class="lg:ml-72 min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-white/20 px-6 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+          <button id="menuToggle" class="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+          <div>
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Recruitment Management
+            </h2>
+            <p class="text-gray-600">Manage candidate applications and interviews</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <button onclick="downloadCSV('recruitment')" class="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-green-700 transition-all shadow-lg">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Export CSV
+            </span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="p-6 space-y-8">
+      
+      <!-- Statistics Section -->
+      <section class="animate-fade-in-up">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="candidate-card p-6 float-animation">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <span class="text-white text-xl">👥</span>
+              </div>
+              <span id="totalCandidates" class="text-2xl font-bold text-gray-900">0</span>
+            </div>
+            <h3 class="font-bold text-gray-900 mb-1">Total Candidates</h3>
+            <p class="text-sm text-gray-600">All applications received</p>
+          </div>
+          
+          <div class="candidate-card p-6 float-animation" style="animation-delay: 0.1s;">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <span class="text-white text-xl">✅</span>
+              </div>
+              <span id="selectedCandidates" class="text-2xl font-bold text-gray-900">0</span>
+            </div>
+            <h3 class="font-bold text-gray-900 mb-1">Selected</h3>
+            <p class="text-sm text-gray-600">Successful candidates</p>
+          </div>
+          
+          <div class="candidate-card p-6 float-animation" style="animation-delay: 0.2s;">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <span class="text-white text-xl">⏳</span>
+              </div>
+              <span id="inProgressCandidates" class="text-2xl font-bold text-gray-900">0</span>
+            </div>
+            <h3 class="font-bold text-gray-900 mb-1">In Progress</h3>
+            <p class="text-sm text-gray-600">Currently interviewing</p>
+          </div>
+          
+          <div class="candidate-card p-6 float-animation" style="animation-delay: 0.3s;">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <span class="text-white text-xl">⏰</span>
+              </div>
+              <span id="waitingCandidates" class="text-2xl font-bold text-gray-900">0</span>
+            </div>
+            <h3 class="font-bold text-gray-900 mb-1">Waiting</h3>
+            <p class="text-sm text-gray-600">Pending review</p>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Loading and Alert States -->
+      <div id="loadingIndicator" class="hidden p-4 bg-blue-50 text-blue-700 rounded-xl mb-4 animate-pulse text-center">
+        <div class="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+        <span class="font-medium">Fetching records...</span>
+      </div>
+      
+      <div id="errorAlert" class="hidden p-4 bg-red-50 text-red-700 rounded-xl mb-4 border border-red-200">
+        <div class="flex items-center gap-2">
+          <span>⚠️</span>
+          <span id="errorMessage">An error occurred</span>
+        </div>
+      </div>
+      
+      <div id="successAlert" class="hidden p-4 bg-green-50 text-green-700 rounded-xl mb-4 border border-green-200">
+        <div class="flex items-center gap-2">
+          <span>✅</span>
+          <span id="successMessage">Operation successful</span>
+        </div>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <section class="animate-fade-in-up">
+        <div class="mb-6 overflow-x-auto no-scrollbar">
+          <div class="flex gap-3 min-w-max p-1">
+            <button id="recruitmentTab" class="recruitment-tab active px-6 py-3 rounded-xl text-sm font-semibold transition-all">
+              All Candidates
+            </button>
+            <button id="selectedTab" class="recruitment-tab px-6 py-3 rounded-xl text-sm font-semibold text-gray-600 transition-all">
+              Selected
+            </button>
+            <button id="inProgressTab" class="recruitment-tab px-6 py-3 rounded-xl text-sm font-semibold text-gray-600 transition-all">
+              In Progress
+            </button>
+            <button id="failedTab" class="recruitment-tab px-6 py-3 rounded-xl text-sm font-semibold text-gray-600 transition-all">
+              Failed
+            </button>
+            <button id="waitingTab" class="recruitment-tab px-6 py-3 rounded-xl text-sm font-semibold text-gray-600 transition-all">
+              Waiting
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Filters Section -->
+      <section class="animate-fade-in-up stagger-1">
+        <div class="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-lg border border-white/20">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="relative">
+              <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <input type="text" id="searchInput" placeholder="Search candidates..." 
+                     class="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            
+            <select id="teamFilter" class="px-4 py-3 bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="">All Teams</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Content Sections -->
+      <section class="animate-fade-in-up stagger-2">
+        <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg border border-white/20 overflow-hidden">
+          
+          <!-- Tab Content Headers -->
+          <div class="p-6 border-b border-gray-100">
+            <h3 id="currentTabTitle" class="text-xl font-bold text-gray-900">All Candidates</h3>
+            <p class="text-gray-600 text-sm mt-1">Manage recruitment applications and candidate status</p>
+          </div>
+
+          <!-- Content Areas -->
+          <div id="recruitmentContent" class="table-responsive-container">
+            <div id="recruitmentTableContainer"></div>
+          </div>
+          
+          <div id="selectedContent" class="hidden table-responsive-container">
+            <div id="selectedTableContainer"></div>
+          </div>
+          
+          <div id="inProgressContent" class="hidden table-responsive-container">
+            <div id="inProgressTableContainer"></div>
+          </div>
+          
+          <div id="failedContent" class="hidden table-responsive-container">
+            <div id="failedTableContainer"></div>
+          </div>
+          
+          <div id="waitingContent" class="hidden table-responsive-container">
+            <div id="waitingTableContainer"></div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Enhanced Member Detail Modal -->
+  <div id="memberModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+    <div id="modalOverlay" class="absolute inset-0 bg-gray-900/70 backdrop-blur-lg" onclick="closePRMModal()"></div>
+    <div class="relative bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden border border-white/20 modal-slide-up">
+      <button onclick="closePRMModal()" class="absolute right-6 top-6 z-10 p-3 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-all shadow-lg">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      
+      <div class="flex flex-col lg:flex-row">
+        <!-- Photo Section -->
+        <div class="w-full lg:w-2/5 bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 flex items-center justify-center p-8 border-r border-gray-100">
+          <div id="modalPhoto" class="w-72 h-72 lg:w-full lg:h-96 rounded-3xl overflow-hidden shadow-2xl bg-white border-4 border-white"></div>
+        </div>
+        
+        <!-- Details Section -->
+        <div class="w-full lg:w-3/5 p-8">
+          <div class="mb-8">
+            <h3 id="modalTitle" class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3"></h3>
+            <div class="flex items-center gap-3">
+              <span id="modalSubtitle" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold text-sm tracking-widest uppercase rounded-full"></span>
+              <span id="modalStatus" class="status-badge"></span>
+            </div>
+          </div>
+          
+          <div id="modalBody" class="grid grid-cols-1 gap-4 max-h-[450px] overflow-y-auto no-scrollbar pr-2">
+            <!-- Details will be populated by JavaScript -->
+          </div>
+          
+          <!-- Action Buttons (Only for authenticated users) -->
+          <div id="modalActionButtons" class="mt-8 hidden">
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="updateCandidateStatus('selected')" class="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl font-medium hover:from-green-600 hover:to-green-700 transition-all shadow-lg flex items-center justify-center gap-2">
+                <span>✅</span>
+                <span>Select Candidate</span>
+              </button>
+              <button onclick="updateCandidateStatus('in_progress')" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg flex items-center justify-center gap-2">
+                <span>⏳</span>
+                <span>Start Interview</span>
+              </button>
+              <button onclick="updateCandidateStatus('waiting')" class="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl font-medium hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg flex items-center justify-center gap-2">
+                <span>⏰</span>
+                <span>Move to Waiting</span>
+              </button>
+              <button onclick="updateCandidateStatus('failed')" class="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl font-medium hover:from-red-600 hover:to-red-700 transition-all shadow-lg flex items-center justify-center gap-2">
+                <span>❌</span>
+                <span>Reject</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load Scripts -->
+  <script src="js/supabase.js"></script>
+  <script src="js/universal-auth.js"></script>
+  <script src="js/universal-ui.js"></script>
+  <script src="js/recruitment.js"></script>
+  
+  <script>
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.remove('-translate-x-full');
+      document.getElementById('menuOverlay').classList.remove('hidden');
+    });
+
+    document.getElementById('menuOverlay')?.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('menuOverlay').classList.add('hidden');
+    });
+
+    // Authentication and user management
+    let currentUser = null;
+    let currentCandidateData = null;
+    
+    // Check authentication status
+    async function checkAuthStatus() {
+      try {
+        if (typeof window.supabase !== 'undefined') {
+          const { data: { user } } = await window.supabase.auth.getUser();
+          currentUser = user;
+          return user !== null;
+        }
+        return false;
+      } catch (error) {
+        console.error('Auth check error:', error);
+        return false;
+      }
+    }
+    
+    // Statistics tracking
+    function updateStatistics(data) {
+      if (!data || !Array.isArray(data)) return;
+      
+      const stats = {
+        total: data.length,
+        selected: data.filter(c => c.status === 'selected').length,
+        inProgress: data.filter(c => c.status === 'in_progress').length,
+        waiting: data.filter(c => c.status === 'waiting').length,
+        failed: data.filter(c => c.status === 'failed').length
+      };
+      
+      document.getElementById('totalCandidates').textContent = stats.total;
+      document.getElementById('selectedCandidates').textContent = stats.selected;
+      document.getElementById('inProgressCandidates').textContent = stats.inProgress;
+      document.getElementById('waitingCandidates').textContent = stats.waiting;
+    }
+
+    // Enhanced modal functions
+    window.closePRMModal = function() {
+      document.getElementById('memberModal').classList.add('hidden');
+      document.body.style.overflow = 'auto';
+      currentCandidateData = null;
+    };
+
+    window.showPRMModal = async function(data) {
+      console.log("Modal Data Received:", data);
+      currentCandidateData = data;
+      const modal = document.getElementById('memberModal');
+      if (!modal || !data) return;
+
+      // Check authentication and show/hide action buttons
+      const isAuthenticated = await checkAuthStatus();
+      const actionButtons = document.getElementById('modalActionButtons');
+      if (actionButtons) {
+        if (isAuthenticated) {
+          actionButtons.classList.remove('hidden');
+        } else {
+          actionButtons.classList.add('hidden');
+        }
+      }
+
+      // Photo logic
+      const rawPath = data.photo_url || data.photo || "";
+      let finalPhotoUrl = "";
+
+      if (rawPath.includes('drive.google.com')) {
+        const idMatch = rawPath.match(/\/d\/([^/]+)/) || rawPath.match(/id=([^&]+)/);
+        if (idMatch && idMatch[1]) {
+          finalPhotoUrl = `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w800`;
+        }
+      } else {
+        finalPhotoUrl = rawPath;
+      }
+      
+      const photoContainer = document.getElementById('modalPhoto');
+      photoContainer.innerHTML = finalPhotoUrl 
+        ? `<img src="${finalPhotoUrl}" class="w-full h-full object-cover rounded-3xl" onerror="this.parentElement.innerHTML='<div class=\"w-full h-full flex items-center justify-center text-gray-300 font-bold text-lg bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl\">📷<br>Image Load Failed</div>'">` 
+        : `<div class="w-full h-full flex items-center justify-center text-gray-400 font-bold text-lg bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex-col"><span class="text-4xl mb-2">👤</span>No Photo Available</div>`;
+
+      // Headers
+      document.getElementById('modalTitle').textContent = data.full_name || data.name || "Candidate Details";
+      document.getElementById('modalSubtitle').textContent = data.preferred_team || data.team || data.role || "Application";
+      
+      // Status badge
+      const statusElement = document.getElementById('modalStatus');
+      const status = data.status || 'pending';
+      statusElement.textContent = status.replace('_', ' ').toUpperCase();
+      statusElement.className = `status-badge status-${status}`;
+
+      // Data grid
+      const body = document.getElementById('modalBody');
+      body.innerHTML = '';
+      const skip = ['id', 'photo', 'photo_url', 'created_at', 'status', 'full_name', 'preferred_team'];
+      
+      Object.entries(data).forEach(([key, val]) => {
+        if (skip.includes(key.toLowerCase())) return;
+        body.innerHTML += `
+          <div class="candidate-card p-4 border-l-4 border-blue-500">
+            <span class="block text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">${key.replace(/_/g, ' ')}</span>
+            <span class="text-gray-900 font-medium break-words text-lg">${val || '—'}</span>
+          </div>`;
+      });
+
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    };
+
+    // Enhanced status update function with Supabase integration
+    window.updateCandidateStatus = async function(newStatus) {
+      if (!currentCandidateData) {
+        showAlert('error', 'No candidate selected');
+        return;
+      }
+
+      // Check authentication
+      const isAuthenticated = await checkAuthStatus();
+      if (!isAuthenticated) {
+        showAlert('error', 'You must be logged in to update candidate status');
+        return;
+      }
+
+      try {
+        // Show loading state
+        showAlert('info', 'Updating candidate status...');
+        
+        // Update status in Supabase (if available)
+        if (typeof window.supabase !== 'undefined') {
+          const { error } = await window.supabase
+            .from('recruitment')
+            .update({ status: newStatus })
+            .eq('id', currentCandidateData.id);
+
+          if (error) {
+            throw error;
+          }
+        }
+
+        // Update local data
+        currentCandidateData.status = newStatus;
+        
+        // Show success message with status-specific text
+        const statusMessages = {
+          'selected': 'Candidate has been selected successfully!',
+          'in_progress': 'Interview has been started for this candidate',
+          'waiting': 'Candidate has been moved to waiting list',
+          'failed': 'Candidate has been rejected'
+        };
+        
+        showAlert('success', statusMessages[newStatus] || 'Status updated successfully');
+        
+        // Close modal
+        closePRMModal();
+        
+        // Refresh data if the function exists
+        if (typeof loadRecruitmentData === 'function') {
+          setTimeout(() => {
+            loadRecruitmentData();
+          }, 1000);
+        }
+        
+        // Update statistics
+        if (typeof window.recruitmentData !== 'undefined') {
+          updateStatistics(window.recruitmentData);
+        }
+        
+      } catch (error) {
+        console.error('Status update error:', error);
+        showAlert('error', `Failed to update status: ${error.message}`);
+      }
+    };
+
+    // Alert system
+    function showAlert(type, message) {
+      const alertTypes = {
+        'success': { element: 'successAlert', messageElement: 'successMessage' },
+        'error': { element: 'errorAlert', messageElement: 'errorMessage' },
+        'info': { element: 'loadingIndicator', messageElement: null }
+      };
+      
+      // Hide all alerts first
+      Object.values(alertTypes).forEach(alert => {
+        const element = document.getElementById(alert.element);
+        if (element) element.classList.add('hidden');
+      });
+      
+      // Show the appropriate alert
+      const alertConfig = alertTypes[type];
+      if (alertConfig) {
+        const alertElement = document.getElementById(alertConfig.element);
+        const messageElement = alertConfig.messageElement ? document.getElementById(alertConfig.messageElement) : null;
+        
+        if (alertElement) {
+          if (messageElement) {
+            messageElement.textContent = message;
+          }
+          alertElement.classList.remove('hidden');
+          
+          // Auto-hide after 3 seconds (except for loading)
+          if (type !== 'info') {
+            setTimeout(() => {
+              alertElement.classList.add('hidden');
+            }, 3000);
+          }
+        }
+      }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('Enhanced Recruitment page loaded successfully');
+      
+      // Check authentication status on load
+      await checkAuthStatus();
+      
+      // Add enhanced tab switching with statistics update
+      const tabs = document.querySelectorAll('.recruitment-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          // Update statistics when switching tabs
+          setTimeout(() => {
+            if (typeof window.recruitmentData !== 'undefined') {
+              updateStatistics(window.recruitmentData);
+            }
+          }, 100);
+        });
+      });
+      
+      // Listen for auth state changes
+      if (typeof window.supabase !== 'undefined') {
+        window.supabase.auth.onAuthStateChange((event, session) => {
+          currentUser = session?.user || null;
+          console.log('Auth state changed:', event, currentUser ? 'Logged in' : 'Logged out');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

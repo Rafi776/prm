@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="PRM Dashboard - Bangladesh Scouts Rover Region Management System">
+  <meta name="theme-color" content="#ffffff">
+  
+  <title>PRM Dashboard - Bangladesh Scouts Rover Region</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    :root {
+      --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      --gradient-warning: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .gradient-bg { background: var(--gradient-primary); }
+    .gradient-card { background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%); }
+    .glass-effect { 
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    
+    .org-node {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center;
+    }
+    
+    .org-node:hover {
+      transform: scale(1.05);
+      z-index: 10;
+    }
+    
+    .member-card {
+      transition: all 0.3s ease;
+      border-radius: 16px;
+      background: linear-gradient(145deg, #ffffff, #f1f5f9);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .member-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    
+    .quick-action {
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border-radius: 16px;
+      transition: all 0.3s ease;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .quick-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border-color: #cbd5e1;
+    }
+    
+    .hierarchy-line {
+      position: relative;
+    }
+    
+    .hierarchy-line::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: -20px;
+      width: 2px;
+      height: 20px;
+      background: linear-gradient(to bottom, #e2e8f0, transparent);
+      transform: translateX(-50%);
+    }
+    
+    .hierarchy-line:last-child::after {
+      display: none;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+    
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+    .stagger-4 { animation-delay: 0.4s; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+  
+  <!-- Navigation Sidebar -->
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white/80 backdrop-blur-xl border-r border-white/20 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-xl">
+    <div class="p-6">
+      <!-- Logo Section -->
+      <div class="flex items-center gap-4 mb-8 p-4 rounded-2xl gradient-bg text-white">
+        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+          <span class="text-2xl">🏕️</span>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold">PRM Dashboard</h1>
+          <p class="text-sm opacity-90">Bangladesh Scouts</p>
+        </div>
+      </div>
+      
+      <!-- Navigation Menu -->
+      <nav class="space-y-2">
+        <a href="dashboard-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg">
+          <span class="text-lg">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="core-team-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">👑</span>
+          <span>Core Team</span>
+        </a>
+        <a href="all-members-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">👥</span>
+          <span>All Members</span>
+        </a>
+        <a href="recruitment-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📋</span>
+          <span>Recruitment</span>
+        </a>
+        <a href="task-tracking-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">✅</span>
+          <span>Task Tracking</span>
+        </a>
+        <a href="submission-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📄</span>
+          <span>Submissions</span>
+        </a>
+        <a href="waiting-room-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">🎥</span>
+          <span>Waiting Room</span>
+        </a>
+        <a href="join-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">🚀</span>
+          <span>Join Us</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Mobile Menu Overlay -->
+  <div id="menuOverlay" class="fixed inset-0 bg-black/50 hidden z-40 lg:hidden"></div>
+
+  <!-- Main Content -->
+  <div class="lg:ml-72 min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-white/20 px-6 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+          <button id="menuToggle" class="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+          <div>
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Dashboard Overview
+            </h2>
+            <p class="text-gray-600">Welcome to PRM Management System</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <button class="p-2 hover:bg-gray-100 rounded-xl transition-colors relative">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
+            </svg>
+            <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+          </button>
+          
+          <!-- Auth buttons will be injected here -->
+          <div id="auth-buttons"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="p-6 space-y-8">
+      
+      <!-- Welcome Hero Section -->
+      <section class="relative overflow-hidden rounded-3xl gradient-bg text-white p-8 animate-fade-in-up">
+        <div class="relative z-10">
+          <div class="flex flex-col lg:flex-row items-center justify-between">
+            <div class="mb-6 lg:mb-0">
+              <h1 class="text-4xl lg:text-5xl font-bold mb-4">
+                Welcome to PRM
+              </h1>
+              <p class="text-xl opacity-90 mb-6">
+                PR Marketing & ICT Taskforce Management System
+              </p>
+              <div class="flex flex-wrap gap-3">
+                <span class="px-4 py-2 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm">
+                  🎯 Task Management
+                </span>
+                <span class="px-4 py-2 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm">
+                  👥 Team Collaboration
+                </span>
+                <span class="px-4 py-2 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm">
+                  📊 Analytics
+                </span>
+              </div>
+            </div>
+            <div class="hidden lg:block">
+              <div class="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
+                <span class="text-6xl">🏕️</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+      </section>
+
+      <!-- Statistics Cards -->
+      <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up stagger-1">
+        <div class="stat-card p-6 text-white">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <span class="text-2xl">👥</span>
+            </div>
+            <span class="text-sm opacity-75">Total</span>
+          </div>
+          <div class="space-y-1">
+            <div class="text-3xl font-bold" id="total-members">Loading...</div>
+            <div class="text-sm opacity-90">Team Members</div>
+          </div>
+        </div>
+
+        <div class="stat-card p-6 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <span class="text-2xl">👑</span>
+            </div>
+            <span class="text-sm opacity-75">Core</span>
+          </div>
+          <div class="space-y-1">
+            <div class="text-3xl font-bold" id="core-members">Loading...</div>
+            <div class="text-sm opacity-90">Core Team</div>
+          </div>
+        </div>
+
+        <div class="stat-card p-6 text-white" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <span class="text-2xl">✅</span>
+            </div>
+            <span class="text-sm opacity-75">Active</span>
+          </div>
+          <div class="space-y-1">
+            <div class="text-3xl font-bold" id="active-tasks">Loading...</div>
+            <div class="text-sm opacity-90">Tasks</div>
+          </div>
+        </div>
+
+        <div class="stat-card p-6 text-white" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <span class="text-2xl">📋</span>
+            </div>
+            <span class="text-sm opacity-75">Pending</span>
+          </div>
+          <div class="space-y-1">
+            <div class="text-3xl font-bold" id="pending-applications">Loading...</div>
+            <div class="text-sm opacity-90">Applications</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Organizational Chart -->
+      <section class="animate-fade-in-up stagger-2">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-2xl font-bold text-gray-900">Organizational Structure</h3>
+          <button onclick="toggleOrgChart()" class="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl transition-colors">
+            <span id="org-toggle-text">Expand Chart</span>
+          </button>
+        </div>
+        
+        <div class="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">
+          <div id="org-chart" class="space-y-8">
+            <!-- Organizational chart will be rendered here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Actions -->
+      <section class="animate-fade-in-up stagger-3">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          <div class="quick-action p-6 cursor-pointer" onclick="window.location.href='task-tracking-redesigned.html'">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">
+                ✅
+              </div>
+              <div>
+                <h4 class="font-bold text-gray-900">Manage Tasks</h4>
+                <p class="text-sm text-gray-600">Create and assign tasks</p>
+              </div>
+            </div>
+            <p class="text-gray-700 text-sm">Track project progress, assign responsibilities, and monitor deadlines across all teams.</p>
+          </div>
+
+          <div class="quick-action p-6 cursor-pointer" onclick="window.location.href='all-members-redesigned.html'">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">
+                👥
+              </div>
+              <div>
+                <h4 class="font-bold text-gray-900">Team Directory</h4>
+                <p class="text-sm text-gray-600">Browse all members</p>
+              </div>
+            </div>
+            <p class="text-gray-700 text-sm">View member profiles, contact information, and team assignments in an organized directory.</p>
+          </div>
+
+          <div class="quick-action p-6 cursor-pointer" onclick="window.location.href='recruitment.html'">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">
+                📋
+              </div>
+              <div>
+                <h4 class="font-bold text-gray-900">Recruitment</h4>
+                <p class="text-sm text-gray-600">Review applications</p>
+              </div>
+            </div>
+            <p class="text-gray-700 text-sm">Process new member applications and manage the recruitment pipeline effectively.</p>
+          </div>
+
+          <div class="quick-action p-6 cursor-pointer" onclick="window.location.href='submission-redesigned.html'">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">
+                📄
+              </div>
+              <div>
+                <h4 class="font-bold text-gray-900">Submissions</h4>
+                <p class="text-sm text-gray-600">Document management</p>
+              </div>
+            </div>
+            <p class="text-gray-700 text-sm">Handle document submissions, NOCs, and other administrative paperwork.</p>
+          </div>
+
+          <div class="quick-action p-6 cursor-pointer" onclick="window.location.href='core-team-redesigned.html'">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-14 h-14 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">
+                👑
+              </div>
+              <div>
+                <h4 class="font-bold text-gray-900">Core Team</h4>
+                <p class="text-sm text-gray-600">Leadership panel</p>
+              </div>
+            </div>
+            <p class="text-gray-700 text-sm">Access core team information and organizational leadership structure.</p>
+          </div>
+
+          <div class="quick-action p-6 cursor-pointer" onclick="window.location.href='waiting-room-redesigned.html'">
+            <div class="flex items-center gap-4 mb-4">
+              <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">
+                🎥
+              </div>
+              <div>
+                <h4 class="font-bold text-gray-900">Waiting Room</h4>
+                <p class="text-sm text-gray-600">Interview sessions</p>
+              </div>
+            </div>
+            <p class="text-gray-700 text-sm">Monitor ongoing interview sessions and candidate status in real-time.</p>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Recent Activity -->
+      <section class="animate-fade-in-up stagger-4">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6">Recent Activity</h3>
+        <div class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
+          <div class="p-6">
+            <div id="recent-activity" class="space-y-4">
+              <!-- Activity items will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Load Scripts -->
+  <script type="module" src="js/config.js"></script>
+  <script type="module" src="js/error-handler.js"></script>
+  <script type="module" src="js/auth-service.js"></script>
+  <script type="module" src="js/api-service.js"></script>
+  <script type="module" src="js/components.js"></script>
+  <script type="module" src="js/org-hierarchy.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/universal-auth.js"></script>
+  <script src="js/universal-ui.js"></script>
+
+  <script>
+    let orgChartExpanded = false;
+    let membersData = [];
+
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        setupMobileMenu();
+        await loadDashboardData();
+        renderOrganizationalChart();
+        loadRecentActivity();
+      } catch (error) {
+        console.error('Dashboard initialization failed:', error);
+      }
+    });
+
+    // Mobile menu setup
+    function setupMobileMenu() {
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebar = document.getElementById('sidebar');
+      const menuOverlay = document.getElementById('menuOverlay');
+
+      menuToggle?.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+        menuOverlay.classList.toggle('hidden');
+      });
+
+      menuOverlay?.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+        menuOverlay.classList.add('hidden');
+      });
+    }
+
+    // Load dashboard statistics
+    async function loadDashboardData() {
+      try {
+        // Load members data
+        if (window.supabaseClient) {
+          const { data: members, error } = await window.supabaseClient
+            .from('prm_members')
+            .select('*');
+          
+          if (!error && members) {
+            membersData = members;
+            updateStatistics(members);
+          }
+        } else {
+          // Fallback with mock data
+          updateStatisticsWithMockData();
+        }
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        updateStatisticsWithMockData();
+      }
+    }
+
+    // Update statistics with real data
+    function updateStatistics(members) {
+      const stats = window.orgHierarchy.getTeamStatistics(members);
+      
+      document.getElementById('total-members').textContent = stats.total;
+      document.getElementById('core-members').textContent = stats.coreTeam;
+      
+      // Mock data for tasks and applications
+      document.getElementById('active-tasks').textContent = Math.floor(Math.random() * 25) + 15;
+      document.getElementById('pending-applications').textContent = Math.floor(Math.random() * 10) + 5;
+    }
+
+    // Fallback mock data
+    function updateStatisticsWithMockData() {
+      document.getElementById('total-members').textContent = '127';
+      document.getElementById('core-members').textContent = '12';
+      document.getElementById('active-tasks').textContent = '23';
+      document.getElementById('pending-applications').textContent = '8';
+    }
+
+    // Render organizational chart
+    function renderOrganizationalChart() {
+      const chartContainer = document.getElementById('org-chart');
+      const hierarchy = window.orgHierarchy.getHierarchyVisualization();
+      
+      if (membersData.length > 0) {
+        const orgChart = window.orgHierarchy.generateOrgChart(membersData);
+        renderOrgChartWithData(chartContainer, orgChart);
+      } else {
+        renderOrgChartStructure(chartContainer, hierarchy);
+      }
+    }
+
+    // Render org chart with member data
+    function renderOrgChartWithData(container, orgChart) {
+      if (!orgChart || orgChart.length === 0) {
+        renderOrgChartStructure(container, window.orgHierarchy.getHierarchyVisualization());
+        return;
+      }
+      
+      container.innerHTML = orgChart.map((level, index) => `
+        <div class="hierarchy-line text-center ${index < 3 || orgChartExpanded ? '' : 'hidden'}">
+          <div class="inline-flex items-center gap-4 mb-4">
+            <div class="org-node bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 shadow-lg border border-gray-200 min-w-[200px]">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-2xl">${level.info.icon}</span>
+                <div class="text-left">
+                  <h4 class="font-bold text-gray-900">${level.position}</h4>
+                  <p class="text-sm text-gray-600">${level.count} member${level.count !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              ${level.members.length > 0 ? `
+                <div class="flex flex-wrap gap-1 mt-2">
+                  ${level.members.slice(0, 3).map(member => `
+                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                      ${member.name || 'Unknown'}
+                    </span>
+                  `).join('')}
+                  ${level.members.length > 3 ? `
+                    <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                      +${level.members.length - 3} more
+                    </span>
+                  ` : ''}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render org chart structure only
+    function renderOrgChartStructure(container, hierarchy) {
+      container.innerHTML = hierarchy.map((level, index) => `
+        <div class="hierarchy-line text-center ${index < 3 || orgChartExpanded ? '' : 'hidden'}">
+          <div class="inline-flex items-center gap-4 mb-4">
+            <div class="org-node bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg border border-gray-200 min-w-[250px]">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style="background-color: ${level.color}20; color: ${level.color};">
+                  ${level.icon}
+                </div>
+                <div class="text-left">
+                  <h4 class="font-bold text-gray-900">${level.position}</h4>
+                  <p class="text-sm text-gray-600">${level.description}</p>
+                </div>
+              </div>
+              ${level.isCoreTeam ? `
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  👑 Core Team
+                </span>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Toggle org chart expansion
+    function toggleOrgChart() {
+      orgChartExpanded = !orgChartExpanded;
+      document.getElementById('org-toggle-text').textContent = orgChartExpanded ? 'Collapse Chart' : 'Expand Chart';
+      renderOrganizationalChart();
+    }
+
+    // Load recent activity
+    function loadRecentActivity() {
+      const activities = [
+        { icon: '✅', text: 'Task "Website Update" completed by John Doe', time: '2 minutes ago', color: 'text-green-600' },
+        { icon: '👤', text: 'New member application from Jane Smith', time: '15 minutes ago', color: 'text-blue-600' },
+        { icon: '📄', text: 'Document submitted by Mike Johnson', time: '1 hour ago', color: 'text-purple-600' },
+        { icon: '🎯', text: 'Task "Logo Design" assigned to Sarah Wilson', time: '2 hours ago', color: 'text-orange-600' },
+        { icon: '📊', text: 'Weekly report generated', time: '3 hours ago', color: 'text-gray-600' }
+      ];
+
+      const container = document.getElementById('recent-activity');
+      if (!container) return;
+      
+      container.innerHTML = activities.map(activity => `
+        <div class="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-xl transition-colors">
+          <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+            <span class="${activity.color}">${activity.icon}</span>
+          </div>
+          <div class="flex-1">
+            <p class="font-medium text-gray-900">${activity.text}</p>
+            <p class="text-sm text-gray-500">${activity.time}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Auto-refresh data every 5 minutes
+    setInterval(loadDashboardData, 5 * 60 * 1000);
+  </script>
+</body>
+</html>

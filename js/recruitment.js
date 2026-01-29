@@ -221,17 +221,31 @@ html += `<tr onclick='window.showPRMModal(${JSON.stringify(row).replace(/'/g, "&
       html += `<td class="px-4 py-3 text-gray-700">${value}</td>`;
     });
 
-    html += `
-      <td class="px-4 py-3">
-        <select class="status-dropdown text-xs font-bold px-3 py-1.5 border rounded-full ${getStatusClass(row.status)}"
-                data-id="${row.id}">
-          <option value="NULL" ${!row.status ? 'selected' : ''}>Not Set</option>
-          <option value="Waiting" ${row.status==='Waiting'?'selected':''}>Waiting</option>
-          <option value="In Progress" ${row.status==='In Progress'?'selected':''}>In Progress</option>
-          <option value="Selected" ${row.status==='Selected'?'selected':''}>Selected</option>
-          <option value="Failed" ${row.status==='Failed'?'selected':''}>Failed</option>
-        </select>
-      </td></tr>`;
+    // Status column - show dropdown only if authenticated
+    const isAuthenticated = window.isAuthenticated ? window.isAuthenticated() : false;
+    
+    if (isAuthenticated) {
+      html += `
+        <td class="px-4 py-3">
+          <select class="status-dropdown text-xs font-bold px-3 py-1.5 border rounded-full ${getStatusClass(row.status)}"
+                  data-id="${row.id}">
+            <option value="NULL" ${!row.status ? 'selected' : ''}>Not Set</option>
+            <option value="Waiting" ${row.status==='Waiting'?'selected':''}>Waiting</option>
+            <option value="In Progress" ${row.status==='In Progress'?'selected':''}>In Progress</option>
+            <option value="Selected" ${row.status==='Selected'?'selected':''}>Selected</option>
+            <option value="Failed" ${row.status==='Failed'?'selected':''}>Failed</option>
+          </select>
+        </td></tr>`;
+    } else {
+      // Show read-only status badge
+      const statusText = row.status || 'Not Set';
+      html += `
+        <td class="px-4 py-3">
+          <span class="text-xs font-bold px-3 py-1.5 border rounded-full ${getStatusClass(row.status)}">
+            ${escapeHtml(statusText)}
+          </span>
+        </td></tr>`;
+    }
   });
 
   html += '</tbody></table></div>';
@@ -244,8 +258,19 @@ html += `<tr onclick='window.showPRMModal(${JSON.stringify(row).replace(/'/g, "&
   
 }
 
-// Status update (unchanged)
+// Status update - now requires authentication
 async function handleStatusChange(e) {
+  // Check authentication before allowing status change
+  if (!window.isAuthenticated || !window.isAuthenticated()) {
+    e.target.selectedIndex = 0; // Reset dropdown
+    if (window.showAuthModal) {
+      window.showAuthModal();
+    } else {
+      alert('Please log in as admin to change status');
+    }
+    return;
+  }
+
   const dropdown = e.target;
   const id = dropdown.dataset.id;
   const value = dropdown.value === 'NULL' ? null : dropdown.value;
@@ -263,12 +288,12 @@ async function handleStatusChange(e) {
     const rec = recruitmentState.allData.find(r => r.id == id);
     if (rec) rec.status = value;
 
-    showSuccess('Status updated');
+    showSuccess('Status updated successfully');
     if (recruitmentState.currentTab !== 'recruitment') {
       renderFilteredData(recruitmentState.currentTab);
     }
   } catch (err) {
-    showError(err.message);
+    showError('Failed to update status: ' + err.message);
   } finally {
     dropdown.disabled = false;
   }
@@ -325,6 +350,16 @@ async function fetchData() {
 document.addEventListener('DOMContentLoaded', () => {
   setupMenuEventListeners();
   setupTabListeners();
+  
+  // Listen for universal auth changes
+  document.addEventListener('universalAuthChange', (e) => {
+    const { isAuthenticated } = e.detail;
+    console.log('Recruitment: Auth change detected:', isAuthenticated);
+    
+    // Re-render current tab to show/hide status dropdowns
+    renderFilteredData(recruitmentState.currentTab);
+  });
+  
   document.getElementById('searchInput')?.addEventListener('input', () =>
     renderFilteredData(recruitmentState.currentTab)
   );

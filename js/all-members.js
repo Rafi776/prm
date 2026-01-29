@@ -6,10 +6,10 @@ const membersState = {
   loading: false
 };
 
-// Authentication state
+// Authentication state - now managed by universal auth
 const authState = {
-  isAuthenticated: false,
-  sessionStart: null,
+  get isAuthenticated() { return window.universalAuth?.isAuthenticated || false; },
+  get sessionStart() { return window.universalAuth?.sessionStart || null; },
   sessionDuration: 6 * 60 * 60 * 1000, // 6 hours in milliseconds
   credentials: {
     username: 'admin',
@@ -38,101 +38,26 @@ function escapeHtml(text) {
   return String(text || '').replace(/[&<>"']/g, m => map[m]);
 }
 
-// Authentication Functions
+// Authentication Functions - now use universal auth
 function checkSession() {
-  if (!authState.isAuthenticated || !authState.sessionStart) {
-    return false;
-  }
-  
-  const now = new Date().getTime();
-  const sessionAge = now - authState.sessionStart;
-  
-  if (sessionAge > authState.sessionDuration) {
-    terminateSession();
-    return false;
-  }
-  
-  return true;
+  return window.isAuthenticated ? window.isAuthenticated() : false;
 }
 
 function showAuthModal() {
-  document.getElementById('authModal').classList.remove('hidden');
-  document.getElementById('adminUser').focus();
+  if (window.showAuthModal) {
+    window.showAuthModal();
+  }
 }
 
 function handleLogin() {
-  const username = document.getElementById('adminUser').value;
-  const password = document.getElementById('adminPass').value;
-  
-  if (username === authState.credentials.username && password === authState.credentials.password) {
-    authState.isAuthenticated = true;
-    authState.sessionStart = new Date().getTime();
-    document.getElementById('authModal').classList.add('hidden');
-    
-    const endSessionBtn = document.getElementById('endSessionBtn');
-    endSessionBtn.classList.remove('hidden');
-    endSessionBtn.classList.add('session-active');
-    
-    // Show create member button and hide login button
-    const createBtn = document.getElementById('createMemberBtn');
-    const loginBtn = document.getElementById('adminLoginBtn');
-    if (createBtn) createBtn.classList.remove('hidden');
-    if (loginBtn) loginBtn.classList.add('hidden');
-    
-    // Update status indicator
-    const statusDiv = document.getElementById('crudStatus');
-    if (statusDiv) {
-      statusDiv.className = 'mb-4 p-3 bg-green-50 border border-green-200 rounded-xl text-green-800 text-sm';
-      statusDiv.innerHTML = '<span class="font-medium">✅ Admin Mode:</span> CRUD features are now active! You can Create, Edit, and Delete members.';
-    }
-    
-    // Clear form
-    document.getElementById('adminUser').value = '';
-    document.getElementById('adminPass').value = '';
-    
-    // Re-render table to show action buttons
-    renderTable();
-    
-    // Show success message briefly
-    showMessage('Authentication successful - CRUD features now available!', 'success');
-    
-    // If there was a pending edit, open it now
-    if (currentEditingMember !== null) {
-      openEditModal(currentEditingMember);
-    }
-  } else {
-    showMessage('Invalid credentials', 'error');
-  }
+  // Handled by universal auth system
+  console.log('Login handled by universal auth system');
 }
 
 function terminateSession() {
-  authState.isAuthenticated = false;
-  authState.sessionStart = null;
-  const endSessionBtn = document.getElementById('endSessionBtn');
-  endSessionBtn.classList.add('hidden');
-  endSessionBtn.classList.remove('session-active');
-  
-  // Hide create member button and show login button
-  const createBtn = document.getElementById('createMemberBtn');
-  const loginBtn = document.getElementById('adminLoginBtn');
-  if (createBtn) createBtn.classList.add('hidden');
-  if (loginBtn) loginBtn.classList.remove('hidden');
-  
-  // Update status indicator
-  const statusDiv = document.getElementById('crudStatus');
-  if (statusDiv) {
-    statusDiv.className = 'mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-800 text-sm';
-    statusDiv.innerHTML = '<span class="font-medium">👀 View Mode:</span> Click any member to view details. <button onclick="showAuthModal()" class="text-yellow-600 hover:text-yellow-800 underline font-medium">Login as admin</button> to enable Create/Edit/Delete features.';
+  if (window.logout) {
+    window.logout();
   }
-  
-  closeEditModal();
-  closeCreateModal();
-  closeDeleteModal();
-  
-  // Re-render table to hide action buttons
-  renderTable();
-  
-  showMessage('Session ended - CRUD features disabled', 'info');
 }
 
 function showMessage(message, type = 'info') {
@@ -287,15 +212,29 @@ function openEditModal(memberIndex) {
   Object.entries(member).forEach(([key, value]) => {
     if (['id', 'created_at', 'photo'].includes(key.toLowerCase())) return;
     
+    // Special handling for bs_id - make it read-only
+    const isBsId = key.toLowerCase() === 'bs_id';
     const isEmail = key.toLowerCase().includes('email');
-    const fieldClass = isEmail ? 'field-disabled' : 'bg-white border-gray-200 focus:border-blue-500';
-    const disabled = isEmail ? 'disabled' : '';
+    
+    let fieldClass = 'bg-white border-gray-200 focus:border-blue-500';
+    let disabled = '';
+    let readOnlyLabel = '';
+    
+    if (isBsId) {
+      fieldClass = 'field-disabled bg-gray-100 border-gray-300';
+      disabled = 'disabled';
+      readOnlyLabel = '<span class="text-red-500 ml-1">(Read Only)</span>';
+    } else if (isEmail) {
+      fieldClass = 'field-disabled bg-gray-100 border-gray-300';
+      disabled = 'disabled';
+      readOnlyLabel = '<span class="text-red-500 ml-1">(Read Only)</span>';
+    }
     
     form.innerHTML += `
       <div class="space-y-1">
         <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider">
           ${key.replace(/_/g, ' ')}
-          ${isEmail ? '<span class="text-red-500 ml-1">(Read Only)</span>' : ''}
+          ${readOnlyLabel}
         </label>
         <input 
           type="text" 
@@ -303,6 +242,7 @@ function openEditModal(memberIndex) {
           value="${escapeHtml(value || '')}" 
           class="w-full px-3 py-2 border rounded-lg outline-none transition-colors ${fieldClass}"
           ${disabled}
+          ${isBsId ? 'title="BS ID cannot be edited for security reasons"' : ''}
           ${isEmail ? 'title="Email cannot be edited for security reasons"' : ''}
         >
       </div>`;
@@ -335,9 +275,16 @@ async function saveMemberEdit() {
   // Build update object
   const updates = {};
   for (let [key, value] of formData.entries()) {
-    if (!key.toLowerCase().includes('email')) { // Don't update email
+    // Don't update email, bs_id, or other protected fields
+    if (!key.toLowerCase().includes('email') && key.toLowerCase() !== 'bs_id') {
       updates[key] = value;
     }
+  }
+  
+  // Validate that we have some updates
+  if (Object.keys(updates).length === 0) {
+    showMessage('No editable fields to update', 'info');
+    return;
   }
   
   showLoading();
@@ -358,7 +305,7 @@ async function saveMemberEdit() {
     
   } catch (error) {
     console.error('Update error:', error);
-    showMessage('Failed to update member', 'error');
+    showMessage('Failed to update member: ' + error.message, 'error');
   } finally {
     hideLoading();
   }
@@ -641,20 +588,24 @@ function setupEventListeners() {
   const modalOverlay = document.getElementById('modalOverlay');
   if (modalOverlay) modalOverlay.onclick = closeModal;
   
-  // Auth modal event listeners
-  const adminPass = document.getElementById('adminPass');
-  if (adminPass) {
-    adminPass.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') handleLogin();
-    });
-  }
-  
-  // Auto-check session every minute
-  setInterval(() => {
-    if (authState.isAuthenticated && !checkSession()) {
-      showMessage('Session expired', 'info');
+  // Listen for universal auth changes
+  document.addEventListener('universalAuthChange', (e) => {
+    const { isAuthenticated } = e.detail;
+    console.log('Universal auth change detected:', isAuthenticated);
+    
+    // Update local auth state
+    if (window.authState) {
+      window.authState.isAuthenticated = isAuthenticated;
     }
-  }, 60000);
+    
+    // Re-render table to show/hide action buttons
+    renderTable();
+    
+    // Handle pending edit
+    if (isAuthenticated && currentEditingMember !== null) {
+      openEditModal(currentEditingMember);
+    }
+  });
   
   const menuToggle = document.getElementById('menuToggle');
   if (menuToggle) {

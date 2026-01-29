@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Join Us - PRM Project Management">
+  <meta name="theme-color" content="#ffffff">
+  
+  <title>Join Us - PRM Project Management</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script async src="https://tally.so/widgets/embed.js"></script>
+  
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Custom styles for embedded form */
+    .form-container {
+      height: calc(100vh - 200px);
+      min-height: 600px;
+    }
+    
+    iframe {
+      border-radius: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Feature card animations */
+    .feature-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+      border-color: #cbd5e1;
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+    
+    /* Floating animation for hero elements */
+    .float-animation {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    /* Pulse animation for status indicator */
+    .pulse-animation {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .5; }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+  
+  <!-- Navigation Sidebar -->
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white/80 backdrop-blur-xl border-r border-white/20 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-xl">
+    <div class="p-6">
+      <!-- Logo Section -->
+      <div class="flex items-center gap-4 mb-8 p-4 rounded-2xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="window.location.href='dashboard-redesigned.html'">
+        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm cursor-pointer">
+          <span class="text-2xl">🏕️</span>
+        </div>
+        <div class="text-white cursor-pointer">
+          <h1 class="text-xl font-bold">PRM Dashboard</h1>
+          <p class="text-sm opacity-90">Bangladesh Scouts</p>
+        </div>
+      </div>
+      
+      <!-- Navigation Menu -->
+      <nav class="space-y-2">
+        <a href="dashboard-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="core-team-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">👑</span>
+          <span>Core Team</span>
+        </a>
+        <a href="all-members-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">👥</span>
+          <span>All Members</span>
+        </a>
+        <a href="recruitment-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📋</span>
+          <span>Recruitment</span>
+        </a>
+        <a href="task-tracking-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">✅</span>
+          <span>Task Tracking</span>
+        </a>
+        <a href="submission-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📄</span>
+          <span>Submissions</span>
+        </a>
+        <a href="waiting-room-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">🎥</span>
+          <span>Waiting Room</span>
+        </a>
+        <a href="join-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg">
+          <span class="text-lg">🚀</span>
+          <span>Join Us</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Mobile Menu Overlay -->
+  <div id="menuOverlay" class="fixed inset-0 bg-black/50 hidden z-40 lg:hidden"></div>
+
+  <!-- Main Content -->
+  <div class="lg:ml-72 min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-white/20 px-6 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+          <button id="menuToggle" class="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+          <div>
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Join Our Team
+            </h2>
+            <p class="text-gray-600">PR Marketing & ICT Taskforce - Bangladesh Scouts Rover Region</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl text-green-700 text-sm font-medium">
+            <span class="w-2 h-2 bg-green-500 rounded-full pulse-animation"></span>
+            Applications Open
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="p-6 space-y-8">
+      
+      <!-- Hero Section -->
+      <section class="animate-fade-in-up">
+        <div class="text-center mb-8">
+          <div class="float-animation mb-6">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto shadow-2xl">
+              <span class="text-4xl">🚀</span>
+            </div>
+          </div>
+          <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+            Ready to Join PR Marketing & ICT Taskforce?
+          </h1>
+          <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Fill out the application form below to start your journey with Bangladesh Scouts Rover Region. 
+            We're looking for passionate individuals who want to make a difference.
+          </p>
+        </div>
+      </section>
+
+      <!-- Features Section -->
+      <section class="animate-fade-in-up stagger-1">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="feature-card p-6">
+            <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <span class="text-2xl">💡</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">Need Help?</h3>
+            <p class="text-gray-600 leading-relaxed">
+              If you have questions about the application process, feel free to reach out to our team for guidance and support.
+            </p>
+          </div>
+          
+          <div class="feature-card p-6">
+            <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <span class="text-2xl">⏱️</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">Processing Time</h3>
+            <p class="text-gray-600 leading-relaxed">
+              Applications are typically reviewed within 5-7 business days. You'll receive an email confirmation upon submission.
+            </p>
+          </div>
+          
+          <div class="feature-card p-6">
+            <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <span class="text-2xl">🎯</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">What's Next?</h3>
+            <p class="text-gray-600 leading-relaxed">
+              After review, qualified candidates will be contacted for an interview or additional steps in the selection process.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Application Form Section -->
+      <section class="animate-fade-in-up stagger-2">
+        <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg border border-white/20 overflow-hidden">
+          <div class="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <span class="text-white font-bold text-xl">📝</span>
+              </div>
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900">PRM Application Form</h2>
+                <p class="text-gray-600">PR Marketing & ICT Taskforce - Bangladesh Scouts Rover Region</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Embedded Tally Form -->
+          <div class="form-container p-6">
+            <iframe 
+              data-tally-src="https://tally.so/r/0QBbPQ?transparentBackground=1" 
+              width="100%" 
+              height="100%" 
+              frameborder="0" 
+              marginheight="0" 
+              marginwidth="0" 
+              title="PRM Application"
+              class="rounded-2xl bg-white">
+            </iframe>
+          </div>
+        </div>
+      </section>
+
+      <!-- Additional Information Section -->
+      <section class="animate-fade-in-up stagger-3">
+        <div class="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-lg border border-white/20">
+          <div class="text-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">Why Join PRM Taskforce?</h3>
+            <p class="text-gray-600">Discover the benefits of being part of our dynamic team</p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="text-center">
+              <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <span class="text-2xl">🌟</span>
+              </div>
+              <h4 class="font-bold text-gray-900 mb-2">Skill Development</h4>
+              <p class="text-sm text-gray-600">Enhance your marketing and technical skills through hands-on projects</p>
+            </div>
+            
+            <div class="text-center">
+              <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <span class="text-2xl">🤝</span>
+              </div>
+              <h4 class="font-bold text-gray-900 mb-2">Networking</h4>
+              <p class="text-sm text-gray-600">Connect with like-minded individuals and build lasting relationships</p>
+            </div>
+            
+            <div class="text-center">
+              <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <span class="text-2xl">📈</span>
+              </div>
+              <h4 class="font-bold text-gray-900 mb-2">Career Growth</h4>
+              <p class="text-sm text-gray-600">Gain valuable experience that will boost your professional journey</p>
+            </div>
+            
+            <div class="text-center">
+              <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-violet-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <span class="text-2xl">🎖️</span>
+              </div>
+              <h4 class="font-bold text-gray-900 mb-2">Recognition</h4>
+              <p class="text-sm text-gray-600">Get recognized for your contributions to the scouting community</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Load Scripts -->
+  <script src="js/universal-auth.js"></script>
+  <script src="js/universal-ui.js"></script>
+  
+  <script>
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.remove('-translate-x-full');
+      document.getElementById('menuOverlay').classList.remove('hidden');
+    });
+
+    document.getElementById('menuOverlay')?.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('menuOverlay').classList.add('hidden');
+    });
+
+    // Initialize Tally form
+    document.addEventListener('DOMContentLoaded', function() {
+      // Tally form will auto-initialize with the async script
+      console.log('Join Us page loaded successfully');
+    });
+  </script>
+</body>
+</html>

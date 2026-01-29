@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Waiting Room - PRM Project Management">
+  <meta name="theme-color" content="#ffffff">
+  
+  <title>Waiting Room - PRM Project Management</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Animation for live indicator */
+    .live-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    /* Gradient animation for cards */
+    .gradient-border {
+      background: linear-gradient(45deg, #ef4444, #f97316, #eab308);
+      background-size: 300% 300%;
+      animation: gradientShift 4s ease infinite;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    /* Floating animation */
+    .float-animation {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    /* Auto-slide carousel */
+    .carousel-container {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .carousel-track {
+      display: flex;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .carousel-slide {
+      min-width: 100%;
+      flex-shrink: 0;
+    }
+    
+    /* Progress indicators */
+    .slide-indicators {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 1.5rem;
+    }
+    
+    .slide-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .slide-indicator.active {
+      background: #ffffff;
+      transform: scale(1.3);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+    
+    /* Countdown timer */
+    .countdown-ring {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: conic-gradient(#ef4444 0deg, rgba(255,255,255,0.2) 0deg);
+      transition: background 0.1s linear;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Candidate display card */
+    .candidate-display {
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border-radius: 24px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .candidate-display::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #ef4444, #f97316, #eab308);
+    }
+    
+    .candidate-display:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Fun animations for engagement */
+    .bounce-in {
+      animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    @keyframes bounceIn {
+      0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+      50% { transform: scale(1.05) rotate(5deg); }
+      70% { transform: scale(0.9) rotate(-2deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    
+    /* Sparkle animation */
+    .sparkle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #fbbf24;
+      border-radius: 50%;
+      animation: sparkle 2s infinite;
+    }
+    
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; transform: scale(0); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+    
+    /* Motivational quotes animation */
+    .quote-fade {
+      animation: quoteFade 8s infinite;
+    }
+    
+    @keyframes quoteFade {
+      0%, 90%, 100% { opacity: 0; transform: translateY(20px); }
+      10%, 80% { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 min-h-screen">
+  
+  <!-- Navigation Sidebar -->
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white/10 backdrop-blur-xl border-r border-white/20 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-xl">
+    <div class="p-6">
+      <!-- Logo Section -->
+      <div class="flex items-center gap-4 mb-8 p-4 rounded-2xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="window.location.href='dashboard-redesigned.html'">
+        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm cursor-pointer">
+          <span class="text-2xl">🏕️</span>
+        </div>
+        <div class="text-white cursor-pointer">
+          <h1 class="text-xl font-bold">PRM Dashboard</h1>
+          <p class="text-sm opacity-90">Bangladesh Scouts</p>
+        </div>
+      </div>
+      
+      <!-- Navigation Menu -->
+      <nav class="space-y-2">
+        <a href="dashboard-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-white/80 transition-all">
+          <span class="text-lg">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="core-team-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-white/80 transition-all">
+          <span class="text-lg">👑</span>
+          <span>Core Team</span>
+        </a>
+        <a href="all-members-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-white/80 transition-all">
+          <span class="text-lg">👥</span>
+          <span>All Members</span>
+        </a>
+        <a href="recruitment-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-white/80 transition-all">
+          <span class="text-lg">📋</span>
+          <span>Recruitment</span>
+        </a>
+        <a href="task-tracking-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-white/80 transition-all">
+          <span class="text-lg">✅</span>
+          <span>Task Tracking</span>
+        </a>
+        <a href="submission-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-white/80 transition-all">
+          <span class="text-lg">📄</span>
+          <span>Submissions</span>
+        </a>
+        <a href="waiting-room-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-red-500 to-orange-600 text-white font-medium shadow-lg">
+          <span class="text-lg">🎥</span>
+          <span>Waiting Room</span>
+        </a>
+        <a href="join-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-white/80 transition-all">
+          <span class="text-lg">🚀</span>
+          <span>Join Us</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Mobile Menu Overlay -->
+  <div id="menuOverlay" class="fixed inset-0 bg-black/50 hidden z-40 lg:hidden"></div>
+
+  <!-- Main Content -->
+  <div class="lg:ml-72 min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 z-30 bg-white/10 backdrop-blur-xl border-b border-white/20 px-6 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+          <button id="menuToggle" class="lg:hidden p-2 hover:bg-white/10 rounded-xl transition-colors text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+          <div>
+            <h2 class="text-2xl font-bold text-white">
+              PR Marketing & ICT Taskforce
+            </h2>
+            <p class="text-white/80">Bangladesh Scouts Rover Region - Live Interview Monitor</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <div class="w-4 h-4 bg-red-500 rounded-full live-pulse"></div>
+          <span class="text-xl font-bold text-white">LIVE</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="p-6 space-y-8">
+      
+      <!-- Loading Indicator -->
+      <div id="loadingIndicator" class="hidden p-4 bg-white/10 backdrop-blur-xl text-white rounded-2xl mb-4 animate-pulse text-center">
+        <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+        <span class="text-sm font-medium">Loading interview sessions...</span>
+      </div>
+      
+      <!-- Current Viva Section -->
+      <section class="animate-fade-in-up">
+        <div class="text-center mb-6">
+          <h1 class="text-3xl md:text-4xl font-bold text-white mb-3">Current Viva is going on:</h1>
+          <div class="w-20 h-1 bg-gradient-to-r from-red-500 to-orange-500 mx-auto rounded-full"></div>
+        </div>
+
+        <!-- Active Sessions Container with Carousel -->
+        <div id="activeSessionsContainer" class="carousel-container">
+          <!-- This will be populated by JavaScript -->
+        </div>
+        
+        <!-- Slide indicators -->
+        <div id="slideIndicators" class="slide-indicators hidden">
+          <!-- Populated by JavaScript -->
+        </div>
+        
+        <!-- Next slide countdown -->
+        <div id="slideCountdown" class="hidden flex justify-center items-center mt-6">
+          <div class="flex items-center gap-4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl px-6 py-4">
+            <div class="countdown-ring">
+              <span id="countdownText" class="text-white font-bold text-lg">5</span>
+            </div>
+            <div class="text-white">
+              <p class="font-bold text-lg">Next Candidate</p>
+              <p class="text-sm opacity-80">Auto-switching in <span id="countdownSeconds">5</span>s</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Empty State -->
+      <section id="emptyState" class="hidden text-center py-12 animate-fade-in-up">
+        <div class="float-animation mb-8">
+          <div class="w-32 h-32 bg-white/10 backdrop-blur-xl rounded-full flex items-center justify-center mx-auto relative border border-white/20">
+            <span class="text-6xl">😴</span>
+            <!-- Sparkle effects -->
+            <div class="sparkle" style="top: 15%; left: 25%; animation-delay: 0s;"></div>
+            <div class="sparkle" style="top: 75%; right: 20%; animation-delay: 0.5s;"></div>
+            <div class="sparkle" style="bottom: 25%; left: 65%; animation-delay: 1s;"></div>
+          </div>
+        </div>
+        
+        <h3 class="text-3xl font-bold text-white mb-4">No Active Interview Sessions</h3>
+        <p class="text-white/80 max-w-2xl mx-auto text-lg mb-8 leading-relaxed">
+          When candidates are being interviewed, they will appear here with auto-slide presentation.
+        </p>
+        
+        <!-- Motivational quotes -->
+        <div class="mb-8 h-16 flex items-center justify-center">
+          <div id="motivationalQuote" class="quote-fade text-white/70 text-xl italic max-w-2xl mx-auto">
+            "Great things never come from comfort zones."
+          </div>
+        </div>
+        
+        <!-- Instructions Card -->
+        <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 max-w-2xl mx-auto mb-8">
+          <h4 class="font-bold text-white text-2xl mb-6">How to start an interview session:</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <div class="flex items-center gap-3 p-4 bg-white/5 rounded-2xl">
+              <span class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">1</span>
+              <div>
+                <p class="text-white font-medium">Go to Recruitment</p>
+                <p class="text-white/70 text-sm">Navigate to the recruitment page</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-4 bg-white/5 rounded-2xl">
+              <span class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">2</span>
+              <div>
+                <p class="text-white font-medium">Find Candidate</p>
+                <p class="text-white/70 text-sm">Locate the candidate to interview</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-4 bg-white/5 rounded-2xl">
+              <span class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">3</span>
+              <div>
+                <p class="text-white font-medium">Change Status</p>
+                <p class="text-white/70 text-sm">Set status to "In Progress"</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 p-4 bg-white/5 rounded-2xl">
+              <span class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">✓</span>
+              <div>
+                <p class="text-white font-medium">Auto Display</p>
+                <p class="text-white/70 text-sm">Candidate appears here automatically</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-8">
+          <a href="recruitment-redesigned.html" class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-2xl font-bold text-lg transition-all shadow-2xl bounce-in">
+            <span class="text-xl">📋</span>
+            Go to Recruitment
+          </a>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Load Scripts -->
+  <script src="js/supabase.js"></script>
+  <script src="js/universal-auth.js"></script>
+  <script src="js/universal-ui.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/waiting-room.js"></script>
+  
+  <script>
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.remove('-translate-x-full');
+      document.getElementById('menuOverlay').classList.remove('hidden');
+    });
+
+    document.getElementById('menuOverlay')?.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('menuOverlay').classList.add('hidden');
+    });
+
+    // Motivational quotes rotation
+    const quotes = [
+      "Great things never come from comfort zones.",
+      "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+      "The future belongs to those who believe in the beauty of their dreams.",
+      "Innovation distinguishes between a leader and a follower.",
+      "The only way to do great work is to love what you do."
+    ];
+    
+    let currentQuoteIndex = 0;
+    const quoteElement = document.getElementById('motivationalQuote');
+    
+    function rotateQuotes() {
+      if (quoteElement) {
+        currentQuoteIndex = (currentQuoteIndex + 1) % quotes.length;
+        quoteElement.textContent = quotes[currentQuoteIndex];
+      }
+    }
+    
+    // Rotate quotes every 8 seconds
+    setInterval(rotateQuotes, 8000);
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Waiting Room redesigned page loaded successfully');
+      
+      // Show empty state initially if no active sessions
+      const emptyState = document.getElementById('emptyState');
+      if (emptyState) {
+        emptyState.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="All Members - PRM Team Directory">
+  <meta name="theme-color" content="#ffffff">
+  
+  <title>All Members - PRM Team Directory</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    .member-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .member-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+      border-color: #cbd5e1;
+    }
+    
+    .member-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      object-fit: cover;
+      border: 3px solid #ffffff;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .position-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .core-team-badge {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .filter-chip {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 8px 16px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .filter-chip:hover {
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+    }
+    
+    .filter-chip.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: transparent;
+    }
+    
+    .search-box {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .search-box:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.95);
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .stats-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 20px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stats-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    
+    .grid-view .member-card {
+      min-height: 280px;
+    }
+    
+    .list-view .member-card {
+      min-height: auto;
+      padding: 16px;
+    }
+    
+    .list-view .member-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .animate-fade-in-up {
+      animation: fadeInUp 0.5s ease-out forwards;
+    }
+    
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+  
+  <!-- Navigation Sidebar -->
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-white/80 backdrop-blur-xl border-r border-white/20 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-xl">
+    <div class="p-6">
+      <!-- Logo Section -->
+      <div class="flex items-center gap-4 mb-8 p-4 rounded-2xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="window.location.href='dashboard-redesigned.html'">
+        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm cursor-pointer">
+          <span class="text-2xl">🏕️</span>
+        </div>
+        <div class="text-white cursor-pointer">
+          <h1 class="text-xl font-bold">PRM Dashboard</h1>
+          <p class="text-sm opacity-90">Bangladesh Scouts</p>
+        </div>
+      </div>
+      
+      <!-- Navigation Menu -->
+      <nav class="space-y-2">
+        <a href="dashboard-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="core-team-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">👑</span>
+          <span>Core Team</span>
+        </a>
+        <a href="all-members-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg">
+          <span class="text-lg">👥</span>
+          <span>All Members</span>
+        </a>
+        <a href="recruitment-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📋</span>
+          <span>Recruitment</span>
+        </a>
+        <a href="task-tracking-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">✅</span>
+          <span>Task Tracking</span>
+        </a>
+        <a href="submission-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📄</span>
+          <span>Submissions</span>
+        </a>
+        <a href="waiting-room-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">🎥</span>
+          <span>Waiting Room</span>
+        </a>
+        <a href="join-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">🚀</span>
+          <span>Join Us</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Mobile Menu Overlay -->
+  <div id="menuOverlay" class="fixed inset-0 bg-black/50 hidden z-40 lg:hidden"></div>
+
+  <!-- Main Content -->
+  <div class="lg:ml-72 min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-white/20 px-6 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+          <button id="menuToggle" class="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+          <div>
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Team Directory
+            </h2>
+            <p class="text-gray-600">Browse and manage all team members</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <!-- View Toggle -->
+          <div class="flex items-center bg-gray-100 rounded-xl p-1">
+            <button id="grid-view-btn" class="p-2 rounded-lg bg-white shadow-sm text-blue-600 transition-all">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+              </svg>
+            </button>
+            <button id="list-view-btn" class="p-2 rounded-lg text-gray-600 hover:text-gray-900 transition-all">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Auth buttons will be injected here -->
+          <div id="auth-buttons"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="p-6 space-y-8">
+      
+      <!-- Statistics Section -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in-up">
+        <div class="stats-card p-6">
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <span class="text-2xl">👥</span>
+              </div>
+              <span class="text-sm opacity-75">Total</span>
+            </div>
+            <div class="space-y-1">
+              <div class="text-3xl font-bold" id="total-members">0</div>
+              <div class="text-sm opacity-90">Team Members</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-card p-6" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <span class="text-2xl">👑</span>
+              </div>
+              <span class="text-sm opacity-75">Core</span>
+            </div>
+            <div class="space-y-1">
+              <div class="text-3xl font-bold" id="core-members">0</div>
+              <div class="text-sm opacity-90">Core Team</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-card p-6" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <span class="text-2xl">🎯</span>
+              </div>
+              <span class="text-sm opacity-75">Teams</span>
+            </div>
+            <div class="space-y-1">
+              <div class="text-3xl font-bold" id="active-teams">0</div>
+              <div class="text-sm opacity-90">Active Teams</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Search and Filters -->
+      <section class="animate-fade-in-up stagger-1">
+        <div class="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-lg border border-white/20">
+          <!-- Search Bar -->
+          <div class="mb-6">
+            <div class="relative">
+              <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <input type="text" id="search-input" placeholder="Search members by name, position, or team..." 
+                     class="w-full pl-12 pr-4 py-4 search-box">
+            </div>
+          </div>
+
+          <!-- Filter Chips -->
+          <div class="flex flex-wrap gap-3 mb-4">
+            <button class="filter-chip active" data-filter="all">All Members</button>
+            <button class="filter-chip" data-filter="core-team">Core Team</button>
+            <button class="filter-chip" data-filter="Graphics Design">Graphics Design</button>
+            <button class="filter-chip" data-filter="Content Writing">Content Writing</button>
+            <button class="filter-chip" data-filter="Social Media">Social Media</button>
+            <button class="filter-chip" data-filter="Video Editing">Video Editing</button>
+            <button class="filter-chip" data-filter="Photography">Photography</button>
+            <button class="filter-chip" data-filter="Research & Development">R&D</button>
+            <button class="filter-chip" data-filter="Rover Paper">Rover Paper</button>
+            <button class="filter-chip" data-filter="Presentation">Presentation</button>
+          </div>
+
+          <!-- Admin Actions -->
+          <div id="admin-actions" class="hidden flex gap-3">
+            <button id="add-member-btn" class="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-green-700 transition-all shadow-lg">
+              <span class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Add Member
+              </span>
+            </button>
+            <button id="export-btn" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg">
+              <span class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Export CSV
+              </span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Members Grid/List -->
+      <section class="animate-fade-in-up stagger-2">
+        <div id="members-container" class="grid-view">
+          <div id="members-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Members will be loaded here -->
+          </div>
+          
+          <!-- Loading State -->
+          <div id="loading-state" class="flex items-center justify-center py-12">
+            <div class="flex items-center gap-3">
+              <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span class="text-gray-600 font-medium">Loading members...</span>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-state" class="hidden text-center py-12">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No members found</h3>
+            <p class="text-gray-600">Try adjusting your search or filter criteria.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Member Detail Modal -->
+  <div id="member-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-md" onclick="closeMemberModal()"></div>
+    <div class="relative bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-bold text-gray-900">Member Details</h3>
+          <button onclick="closeMemberModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+        </div>
+      </div>
+      <div id="member-modal-content" class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+        <!-- Member details will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Member Modal -->
+  <div id="edit-member-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-md" onclick="closeEditModal()"></div>
+    <div class="relative bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 id="edit-modal-title" class="text-xl font-bold text-gray-900">Add Member</h3>
+          <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+        </div>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+        <form id="member-form" class="space-y-6">
+          <!-- Form fields will be added here -->
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load Scripts -->
+  <script type="module" src="js/config.js"></script>
+  <script type="module" src="js/error-handler.js"></script>
+  <script type="module" src="js/auth-service.js"></script>
+  <script type="module" src="js/api-service.js"></script>
+  <script type="module" src="js/components.js"></script>
+  <script type="module" src="js/org-hierarchy.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/universal-auth.js"></script>
+  <script src="js/universal-ui.js"></script>
+  <script src="js/all-members.js"></script>
+
+  <script>
+    let allMembers = [];
+    let filteredMembers = [];
+    let currentView = 'grid';
+    let currentFilter = 'all';
+    let isAuthenticated = false;
+
+    // Helper function to get proper image URL (same as original all-members.js)
+    function getImageUrl(photoUrl, memberName, size = 'w200') {
+      if (!photoUrl) {
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(memberName || 'User')}&background=667eea&color=fff`;
+      }
+      
+      // Handle Google Drive URLs
+      if (photoUrl.includes('drive.google.com')) {
+        try {
+          const idMatch = photoUrl.match(/\/d\/([^/]+)/) || photoUrl.match(/id=([^&]+)/);
+          if (idMatch && idMatch[1]) {
+            return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=${size}`;
+          }
+        } catch (e) {
+          console.error('Error processing Google Drive URL:', e);
+        }
+      }
+      
+      return photoUrl;
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        setupMobileMenu();
+        setupViewToggle();
+        setupFilters();
+        setupSearch();
+        setupAuthCallbacks();
+        
+        // Wait for all-members.js to be loaded and initialized
+        if (window.membersState) {
+          // Use the existing all-members.js functionality
+          await integrateWithAllMembersJS();
+        } else {
+          // Fallback to direct loading
+          await loadMembers();
+        }
+      } catch (error) {
+        console.error('Page initialization failed:', error);
+        await loadMembers(); // Fallback
+      }
+    });
+
+    // Integrate with existing all-members.js
+    async function integrateWithAllMembersJS() {
+      try {
+        // Wait for data to be loaded by all-members.js
+        if (window.membersState && window.membersState.allData.length > 0) {
+          allMembers = window.membersState.allData;
+          updateStatistics();
+          applyFilters();
+        } else {
+          // Trigger data fetch from all-members.js
+          if (window.fetchData) {
+            await window.fetchData();
+            allMembers = window.membersState?.allData || [];
+            updateStatistics();
+            applyFilters();
+          } else {
+            throw new Error('all-members.js not properly loaded');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to integrate with all-members.js:', error);
+        await loadMembers(); // Fallback
+      }
+    }
+
+    // Mobile menu setup
+    function setupMobileMenu() {
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebar = document.getElementById('sidebar');
+      const menuOverlay = document.getElementById('menuOverlay');
+
+      menuToggle?.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+        menuOverlay.classList.toggle('hidden');
+      });
+
+      menuOverlay?.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+        menuOverlay.classList.add('hidden');
+      });
+    }
+
+    // View toggle setup
+    function setupViewToggle() {
+      const gridBtn = document.getElementById('grid-view-btn');
+      const listBtn = document.getElementById('list-view-btn');
+      const container = document.getElementById('members-container');
+
+      gridBtn.addEventListener('click', () => {
+        currentView = 'grid';
+        container.className = 'grid-view';
+        gridBtn.className = 'p-2 rounded-lg bg-white shadow-sm text-blue-600 transition-all';
+        listBtn.className = 'p-2 rounded-lg text-gray-600 hover:text-gray-900 transition-all';
+        renderMembers();
+      });
+
+      listBtn.addEventListener('click', () => {
+        currentView = 'list';
+        container.className = 'list-view';
+        listBtn.className = 'p-2 rounded-lg bg-white shadow-sm text-blue-600 transition-all';
+        gridBtn.className = 'p-2 rounded-lg text-gray-600 hover:text-gray-900 transition-all';
+        renderMembers();
+      });
+    }
+
+    // Filter setup
+    function setupFilters() {
+      const filterChips = document.querySelectorAll('.filter-chip');
+      
+      filterChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          // Update active state
+          filterChips.forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          
+          // Apply filter
+          currentFilter = chip.dataset.filter;
+          applyFilters();
+        });
+      });
+    }
+
+    // Search setup
+    function setupSearch() {
+      const searchInput = document.getElementById('search-input');
+      let searchTimeout;
+
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          applyFilters();
+        }, 300);
+      });
+    }
+
+    // Auth callbacks
+    function setupAuthCallbacks() {
+      document.addEventListener('universalAuthChange', (e) => {
+        const { isAuthenticated: authStatus } = e.detail;
+        isAuthenticated = authStatus;
+        updateAuthUI();
+      });
+
+      // Check initial auth state
+      if (window.isAuthenticated) {
+        isAuthenticated = window.isAuthenticated();
+        updateAuthUI();
+      }
+    }
+
+    // Update UI based on auth
+    function updateAuthUI() {
+      const adminActions = document.getElementById('admin-actions');
+      if (isAuthenticated) {
+        adminActions.classList.remove('hidden');
+        setupAdminActions();
+      } else {
+        adminActions.classList.add('hidden');
+      }
+    }
+
+    // Setup admin actions
+    function setupAdminActions() {
+      document.getElementById('add-member-btn')?.addEventListener('click', () => {
+        openEditModal();
+      });
+
+      document.getElementById('export-btn')?.addEventListener('click', () => {
+        exportToCSV();
+      });
+    }
+
+    // Load members data
+    async function loadMembers() {
+      try {
+        document.getElementById('loading-state').style.display = 'flex';
+        
+        if (window.supabaseClient) {
+          const { data: members, error } = await window.supabaseClient
+            .from('prm_members')
+            .select('*')
+            .order('name');
+          
+          if (!error && members) {
+            allMembers = members;
+            updateStatistics();
+            applyFilters();
+          } else {
+            throw new Error(error?.message || 'Failed to load members');
+          }
+        } else {
+          // Fallback with mock data
+          loadMockData();
+        }
+      } catch (error) {
+        console.error('Failed to load members:', error);
+        loadMockData();
+      } finally {
+        document.getElementById('loading-state').style.display = 'none';
+      }
+    }
+
+    // Load mock data for testing
+    function loadMockData() {
+      allMembers = [
+        {
+          id: 1,
+          name: 'Admin User',
+          position: 'Convener',
+          team_name: 'Core Team',
+          email: 'admin@prm.com',
+          phone: '+8801234567890',
+          district: 'Dhaka',
+          scout_group: 'Dhaka Scouts',
+          stage: 'Rover',
+          photo: null // Will use fallback or actual Supabase photo URL
+        },
+        {
+          id: 2,
+          name: 'John Doe',
+          position: 'Team Coordinator',
+          team_name: 'Graphics Design',
+          email: 'john@prm.com',
+          phone: '+8801234567891',
+          district: 'Chattogram',
+          scout_group: 'Chattogram Scouts',
+          stage: 'Rover',
+          photo: null // Will use fallback or actual Supabase photo URL
+        },
+        {
+          id: 3,
+          name: 'Jane Smith',
+          position: 'Team Coordinator',
+          team_name: 'Content Writing',
+          email: 'jane@prm.com',
+          phone: '+8801234567892',
+          district: 'Sylhet',
+          scout_group: 'Sylhet Scouts',
+          stage: 'Rover',
+          photo: null // Will use fallback or actual Supabase photo URL
+        },
+        {
+          id: 4,
+          name: 'Mike Johnson',
+          position: 'Team Coordinator',
+          team_name: 'Social Media',
+          email: 'mike@prm.com',
+          phone: '+8801234567893',
+          district: 'Rajshahi',
+          scout_group: 'Rajshahi Scouts',
+          stage: 'Rover',
+          photo: null // Will use fallback or actual Supabase photo URL
+        },
+        {
+          id: 5,
+          name: 'Sarah Wilson',
+          position: 'Team Coordinator',
+          team_name: 'Video Editing',
+          email: 'sarah@prm.com',
+          phone: '+8801234567894',
+          district: 'Khulna',
+          scout_group: 'Khulna Scouts',
+          stage: 'Rover',
+          photo: null // Will use fallback or actual Supabase photo URL
+        },
+        {
+          id: 6,
+          name: 'David Brown',
+          position: 'Team Coordinator',
+          team_name: 'Photography',
+          email: 'david@prm.com',
+          phone: '+8801234567895',
+          district: 'Barisal',
+          scout_group: 'Barisal Scouts',
+          stage: 'Rover',
+          photo: null // Will use fallback or actual Supabase photo URL
+        },
+        {
+          id: 7,
+          name: 'Lisa Davis',
+          position: 'Team Coordinator',
+          team_name: 'Research & Development',
+          email: 'lisa@prm.com',
+          phone: '+8801234567896',
+          district: 'Rangpur',
+          scout_group: 'Rangpur Scouts',
+          stage: 'Rover',
+          photo: null // Will use fallback or actual Supabase photo URL
+        },
+        {
+          id: 8,
+          name: 'Tom Wilson',
+          position: 'Team Coordinator',
+          team_name: 'Rover Paper',
+          email: 'tom@prm.com',
+          phone: '+8801234567897',
+          district: 'Mymensingh',
+          scout_group: 'Mymensingh Scouts',
+          stage: 'Rover',
+          photo: null // Will use fallback or actual Supabase photo URL
+        },
+        {
+          id: 9,
+          name: 'Amy Chen',
+          position: 'Team Coordinator',
+          team_name: 'Presentation',
+          email: 'amy@prm.com',
+          phone: '+8801234567898',
+          district: 'Comilla',
+          scout_group: 'Comilla Scouts',
+          stage: 'Rover',
+          photo: null // Will use fallback or actual Supabase photo URL
+        },
+        // Add some regular members
+        {
+          id: 10,
+          name: 'Alice Johnson',
+          position: 'Member',
+          team_name: 'Graphics Design',
+          email: 'alice@prm.com',
+          phone: '+8801234567899',
+          district: 'Dhaka',
+          scout_group: 'Dhaka Scouts',
+          stage: 'Rover',
+          photo: null // Will use fallback or actual Supabase photo URL
+        },
+        {
+          id: 11,
+          name: 'Bob Wilson',
+          position: 'Member',
+          team_name: 'Graphics Design',
+          email: 'bob@prm.com',
+          phone: '+8801234567800',
+          district: 'Chattogram',
+          scout_group: 'Chattogram Scouts',
+          stage: 'Rover',
+          photo: null // Will use fallback or actual Supabase photo URL
+        },
+        {
+          id: 12,
+          name: 'Carol Davis',
+          position: 'Member',
+          team_name: 'Content Writing',
+          email: 'carol@prm.com',
+          phone: '+8801234567801',
+          district: 'Sylhet',
+          scout_group: 'Sylhet Scouts',
+          stage: 'Rover',
+          photo: null // Will use fallback or actual Supabase photo URL
+        }
+      ];
+      
+      updateStatistics();
+      applyFilters();
+    }
+
+    // Update statistics
+    function updateStatistics() {
+      if (!window.orgHierarchy) {
+        // Fallback statistics calculation
+        const total = allMembers.length;
+        const coreTeam = allMembers.filter(member => 
+          member.team_name === 'Core Team' || 
+          ['Convener', 'Joint Convener', 'Member Secretary', 'Team Coordinator'].includes(member.position)
+        ).length;
+        const teams = [...new Set(allMembers.map(m => m.team_name).filter(Boolean))].length;
+        
+        document.getElementById('total-members').textContent = total;
+        document.getElementById('core-members').textContent = coreTeam;
+        document.getElementById('active-teams').textContent = teams;
+        return;
+      }
+      
+      const stats = window.orgHierarchy.getTeamStatistics(allMembers);
+      
+      document.getElementById('total-members').textContent = stats.total;
+      document.getElementById('core-members').textContent = stats.coreTeam;
+      document.getElementById('active-teams').textContent = Object.keys(stats.byTeam).length;
+    }
+
+    // Apply filters and search
+    function applyFilters() {
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      
+      filteredMembers = allMembers.filter(member => {
+        // Search filter
+        const matchesSearch = !searchTerm || 
+          member.name?.toLowerCase().includes(searchTerm) ||
+          member.position?.toLowerCase().includes(searchTerm) ||
+          member.team_name?.toLowerCase().includes(searchTerm) ||
+          member.email?.toLowerCase().includes(searchTerm);
+        
+        // Category filter
+        let matchesFilter = true;
+        if (currentFilter === 'core-team') {
+          if (window.orgHierarchy) {
+            matchesFilter = window.orgHierarchy.isCoreTeamMember(member);
+          } else {
+            // Fallback core team detection
+            matchesFilter = member.team_name === 'Core Team' || 
+              ['Convener', 'Joint Convener', 'Member Secretary', 'Team Coordinator'].includes(member.position);
+          }
+        } else if (currentFilter !== 'all') {
+          matchesFilter = member.team_name === currentFilter;
+        }
+        
+        return matchesSearch && matchesFilter;
+      });
+      
+      // Sort by chain of command
+      sortMembersByChainOfCommand();
+      renderMembers();
+    }
+
+    // Sort members by chain of command with team-specific logic
+    function sortMembersByChainOfCommand() {
+      filteredMembers.sort((a, b) => {
+        // Define hierarchy order
+        const hierarchyOrder = {
+          'Convener': 1,
+          'Joint Convener': 2,
+          'Member Secretary': 3,
+          'Team Coordinator': 4,
+          'Member': 5
+        };
+        
+        const levelA = hierarchyOrder[a.position] || 5;
+        const levelB = hierarchyOrder[b.position] || 5;
+        
+        // If filtering by specific team (not 'all' or 'core-team')
+        if (currentFilter !== 'all' && currentFilter !== 'core-team') {
+          // Team Coordinator of the filtered team comes first
+          const aIsTeamCoordinator = a.position === 'Team Coordinator' && a.team_name === currentFilter;
+          const bIsTeamCoordinator = b.position === 'Team Coordinator' && b.team_name === currentFilter;
+          
+          if (aIsTeamCoordinator && !bIsTeamCoordinator) return -1;
+          if (!aIsTeamCoordinator && bIsTeamCoordinator) return 1;
+          
+          // Then other team members
+          const aIsTeamMember = a.team_name === currentFilter;
+          const bIsTeamMember = b.team_name === currentFilter;
+          
+          if (aIsTeamMember && !bIsTeamMember) return -1;
+          if (!aIsTeamMember && bIsTeamMember) return 1;
+        }
+        
+        // Primary sort: by hierarchy level
+        if (levelA !== levelB) {
+          return levelA - levelB;
+        }
+        
+        // Secondary sort: Team Coordinators by team name, others by name
+        if (a.position === 'Team Coordinator' && b.position === 'Team Coordinator') {
+          const teamCompare = (a.team_name || '').localeCompare(b.team_name || '');
+          if (teamCompare !== 0) return teamCompare;
+        }
+        
+        // Tertiary sort: by name
+        return (a.name || '').localeCompare(b.name || '');
+      });
+    }
+
+    // Render members
+    function renderMembers() {
+      const container = document.getElementById('members-grid');
+      const emptyState = document.getElementById('empty-state');
+      
+      if (filteredMembers.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      
+      if (currentView === 'grid') {
+        renderGridView(container);
+      } else {
+        renderListView(container);
+      }
+    }
+
+    // Render grid view
+    function renderGridView(container) {
+      container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
+      
+      container.innerHTML = filteredMembers.map((member, index) => {
+        let badge;
+        if (window.orgHierarchy) {
+          badge = window.orgHierarchy.getMemberBadge(member);
+        } else {
+          // Fallback badge creation
+          const isCoreTeam = member.team_name === 'Core Team' || 
+            ['Convener', 'Joint Convener', 'Member Secretary', 'Team Coordinator'].includes(member.position);
+          badge = {
+            position: member.position || 'Member',
+            icon: isCoreTeam ? '👑' : '👤',
+            isCoreTeam: isCoreTeam
+          };
+        }
+        
+        // Highlight Team Coordinators and special highlighting for filtered team coordinator
+        const isTeamCoordinator = member.position === 'Team Coordinator';
+        const isFilteredTeamCoordinator = isTeamCoordinator && member.team_name === currentFilter && currentFilter !== 'all' && currentFilter !== 'core-team';
+        
+        let cardClass = 'member-card p-6 cursor-pointer';
+        
+        if (isFilteredTeamCoordinator) {
+          // Special highlighting for the team coordinator of filtered team
+          cardClass += ' ring-4 ring-purple-400 bg-gradient-to-br from-purple-50 via-pink-50 to-purple-50 shadow-xl';
+        } else if (isTeamCoordinator) {
+          // Regular Team Coordinator highlighting
+          cardClass += ' ring-2 ring-purple-300 bg-gradient-to-br from-purple-50 to-pink-50';
+        }
+        
+        // Chain of command indicator
+        const hierarchyLevel = getHierarchyLevel(member.position);
+        const hierarchyColors = {
+          1: '#8B5CF6', // Convener - Purple
+          2: '#7C3AED', // Joint Convener - Indigo
+          3: '#6D28D9', // Member Secretary - Blue
+          4: '#5B21B6', // Team Coordinator - Violet
+          5: '#1E40AF'  // Member - Blue
+        };
+        const hierarchyColor = hierarchyColors[hierarchyLevel] || '#1E40AF';
+        
+        return `
+          <div class="${cardClass}" onclick="openMemberModal(${member.id})" style="border-left: 4px solid ${hierarchyColor}">
+            <div class="text-center">
+              <img src="${getImageUrl(member.photo, member.name)}" 
+                   alt="${member.name}" 
+                   class="member-avatar mx-auto mb-4"
+                   onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(member.name || 'User')}&background=667eea&color=fff'">
+              
+              <h3 class="font-bold text-gray-900 mb-2">${member.name || 'Unknown'}</h3>
+              
+              <div class="space-y-2 mb-4">
+                <div class="position-badge ${badge.isCoreTeam ? 'core-team-badge' : ''}" style="background: ${hierarchyColor}; color: white;">
+                  <span>${badge.icon}</span>
+                  <span>${badge.position}</span>
+                </div>
+                
+                <p class="text-sm text-gray-600">${member.team_name || 'No Team'}</p>
+                
+                ${isFilteredTeamCoordinator ? 
+                  '<div class="text-xs font-bold text-purple-600 bg-purple-100 px-3 py-1 rounded-full animate-pulse">⭐ TEAM LEADER</div>' : 
+                  isTeamCoordinator ? 
+                    '<div class="text-xs font-bold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">⭐ Team Coordinator</div>' : 
+                    ''
+                }
+                
+                ${hierarchyLevel <= 3 ? 
+                  '<div class="text-xs font-bold text-gold-600 bg-yellow-100 px-2 py-1 rounded-full">👑 Core Leadership</div>' : 
+                  ''
+                }
+              </div>
+              
+              <div class="space-y-1 text-xs text-gray-500">
+                <p class="flex items-center justify-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                  ${member.email || 'No email'}
+                </p>
+                <p class="flex items-center justify-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  ${member.district || 'Unknown'}
+                </p>
+                <p class="flex items-center justify-center gap-1" style="color: ${hierarchyColor}">
+                  <span class="w-2 h-2 rounded-full" style="background: ${hierarchyColor}"></span>
+                  Authority Level ${hierarchyLevel}
+                </p>
+              </div>
+              
+              ${isAuthenticated ? `
+                <div class="flex gap-2 mt-4">
+                  <button onclick="event.stopPropagation(); editMember(${member.id})" 
+                          class="flex-1 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition-colors">
+                    Edit
+                  </button>
+                  <button onclick="event.stopPropagation(); deleteMember(${member.id})" 
+                          class="flex-1 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-colors">
+                    Delete
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Helper function to get hierarchy level
+    function getHierarchyLevel(position) {
+      const hierarchyOrder = {
+        'Convener': 1,
+        'Joint Convener': 2,
+        'Member Secretary': 3,
+        'Team Coordinator': 4,
+        'Member': 5
+      };
+      return hierarchyOrder[position] || 5;
+    }
+
+    // Render list view
+    function renderListView(container) {
+      container.className = 'space-y-4';
+      
+      container.innerHTML = filteredMembers.map((member, index) => {
+        let badge;
+        if (window.orgHierarchy) {
+          badge = window.orgHierarchy.getMemberBadge(member);
+        } else {
+          // Fallback badge creation
+          const isCoreTeam = member.team_name === 'Core Team' || 
+            ['Convener', 'Joint Convener', 'Member Secretary', 'Team Coordinator'].includes(member.position);
+          badge = {
+            position: member.position || 'Member',
+            icon: isCoreTeam ? '👑' : '👤',
+            isCoreTeam: isCoreTeam
+          };
+        }
+        
+        // Highlight Team Coordinators and special highlighting for filtered team coordinator
+        const isTeamCoordinator = member.position === 'Team Coordinator';
+        const isFilteredTeamCoordinator = isTeamCoordinator && member.team_name === currentFilter && currentFilter !== 'all' && currentFilter !== 'core-team';
+        
+        let cardClass = 'member-card p-4 cursor-pointer';
+        
+        if (isFilteredTeamCoordinator) {
+          // Special highlighting for the team coordinator of filtered team
+          cardClass += ' ring-4 ring-purple-400 bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 shadow-xl';
+        } else if (isTeamCoordinator) {
+          // Regular Team Coordinator highlighting
+          cardClass += ' ring-2 ring-purple-300 bg-gradient-to-r from-purple-50 to-pink-50';
+        }
+        
+        // Chain of command indicator
+        const hierarchyLevel = getHierarchyLevel(member.position);
+        const hierarchyColors = {
+          1: '#8B5CF6', // Convener - Purple
+          2: '#7C3AED', // Joint Convener - Indigo
+          3: '#6D28D9', // Member Secretary - Blue
+          4: '#5B21B6', // Team Coordinator - Violet
+          5: '#1E40AF'  // Member - Blue
+        };
+        const hierarchyColor = hierarchyColors[hierarchyLevel] || '#1E40AF';
+        
+        return `
+          <div class="${cardClass}" onclick="openMemberModal(${member.id})" style="border-left: 4px solid ${hierarchyColor}">
+            <div class="flex items-center gap-4">
+              <img src="${getImageUrl(member.photo, member.name)}" 
+                   alt="${member.name}" 
+                   class="member-avatar"
+                   onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(member.name || 'User')}&background=667eea&color=fff'">
+              
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2 flex-wrap">
+                  <h3 class="font-bold text-gray-900">${member.name || 'Unknown'}</h3>
+                  <div class="position-badge ${badge.isCoreTeam ? 'core-team-badge' : ''}" style="background: ${hierarchyColor}; color: white;">
+                    <span>${badge.icon}</span>
+                    <span>${badge.position}</span>
+                  </div>
+                  
+                  ${isFilteredTeamCoordinator ? 
+                    '<span class="text-xs font-bold text-purple-600 bg-purple-100 px-3 py-1 rounded-full animate-pulse">⭐ TEAM LEADER</span>' : 
+                    isTeamCoordinator ? 
+                      '<span class="text-xs font-bold text-purple-600 bg-purple-100 px-2 py-1 rounded-full">⭐ Team Coordinator</span>' : 
+                      ''
+                  }
+                  
+                  ${hierarchyLevel <= 3 ? 
+                    '<span class="text-xs font-bold text-gold-600 bg-yellow-100 px-2 py-1 rounded-full">👑 Core Leadership</span>' : 
+                    ''
+                  }
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-2 text-sm text-gray-600">
+                  <p><strong>Team:</strong> ${member.team_name || 'No Team'}</p>
+                  <p><strong>Email:</strong> ${member.email || 'No email'}</p>
+                  <p><strong>District:</strong> ${member.district || 'Unknown'}</p>
+                  <p style="color: ${hierarchyColor}"><strong>Level:</strong> ${hierarchyLevel}</p>
+                </div>
+              </div>
+              
+              ${isAuthenticated ? `
+                <div class="flex gap-2">
+                  <button onclick="event.stopPropagation(); editMember(${member.id})" 
+                          class="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition-colors">
+                    Edit
+                  </button>
+                  <button onclick="event.stopPropagation(); deleteMember(${member.id})" 
+                          class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-colors">
+                    Delete
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Member modal functions
+    function openMemberModal(memberId) {
+      const member = allMembers.find(m => m.id === memberId);
+      if (!member) return;
+      
+      let badge;
+      if (window.orgHierarchy) {
+        badge = window.orgHierarchy.getMemberBadge(member);
+      } else {
+        // Fallback badge creation
+        const isCoreTeam = member.team_name === 'Core Team' || 
+          ['Convener', 'Joint Convener', 'Member Secretary', 'Team Coordinator'].includes(member.position);
+        badge = {
+          position: member.position || 'Member',
+          icon: isCoreTeam ? '👑' : '👤',
+          isCoreTeam: isCoreTeam
+        };
+      }
+      
+      const modal = document.getElementById('member-modal');
+      const content = document.getElementById('member-modal-content');
+      
+      content.innerHTML = `
+        <div class="text-center mb-6">
+          <img src="${getImageUrl(member.photo, member.name, 'w600')}" 
+               alt="${member.name}" 
+               class="w-32 h-32 rounded-3xl mx-auto mb-4 border-4 border-white shadow-lg"
+               onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(member.name || 'User')}&background=667eea&color=fff&size=200'">
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">${member.name || 'Unknown'}</h2>
+          <div class="position-badge ${badge.isCoreTeam ? 'core-team-badge' : ''} mb-2">
+            <span>${badge.icon}</span>
+            <span>${badge.position}</span>
+          </div>
+          ${badge.isCoreTeam ? '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">👑 Core Team Member</span>' : ''}
+          ${member.position === 'Team Coordinator' ? '<div class="mt-2"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">⭐ Team Coordinator</span></div>' : ''}
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Team</label>
+              <p class="text-gray-900">${member.team_name || 'No Team'}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <p class="text-gray-900">${member.email || 'No email'}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <p class="text-gray-900">${member.phone || 'No phone'}</p>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">District</label>
+              <p class="text-gray-900">${member.district || 'Unknown'}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Scout Group</label>
+              <p class="text-gray-900">${member.scout_group || 'Not specified'}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Stage</label>
+              <p class="text-gray-900">${member.stage || 'Not specified'}</p>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      modal.classList.remove('hidden');
+    }
+
+    function closeMemberModal() {
+      document.getElementById('member-modal').classList.add('hidden');
+    }
+
+    // Edit member functions
+    function editMember(memberId) {
+      const member = allMembers.find(m => m.id === memberId);
+      if (!member) return;
+      
+      openEditModal(member);
+    }
+
+    function openEditModal(member = null) {
+      const modal = document.getElementById('edit-member-modal');
+      const title = document.getElementById('edit-modal-title');
+      const form = document.getElementById('member-form');
+      
+      title.textContent = member ? 'Edit Member' : 'Add Member';
+      
+      // Get available positions and teams
+      let positions, teams;
+      if (window.orgHierarchy) {
+        positions = window.orgHierarchy.getAllPositions();
+        teams = window.orgHierarchy.teams;
+      } else {
+        // Fallback positions and teams
+        positions = ['Convener', 'Joint Convener', 'Member Secretary', 'Team Coordinator', 'Member'];
+        teams = ['Core Team', 'Graphics Design', 'Content Writing', 'Social Media', 'Video Editing', 'Photography', 'Research & Development', 'Rover Paper', 'Presentation'];
+      }
+      
+      // Create form fields
+      form.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Name *</label>
+            <input type="text" name="name" value="${member?.name || ''}" required
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Position *</label>
+            <select name="position" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              ${positions.map(pos => 
+                `<option value="${pos}" ${member?.position === pos ? 'selected' : ''}>${pos}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Team *</label>
+            <select name="team_name" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              ${teams.map(team => 
+                `<option value="${team}" ${member?.team_name === team ? 'selected' : ''}>${team}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+            <input type="email" name="email" value="${member?.email || ''}" required
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+            <input type="tel" name="phone" value="${member?.phone || ''}"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">District</label>
+            <input type="text" name="district" value="${member?.district || ''}"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Scout Group</label>
+            <input type="text" name="scout_group" value="${member?.scout_group || ''}"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Stage</label>
+            <select name="stage"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="">Select Stage</option>
+              <option value="Cub" ${member?.stage === 'Cub' ? 'selected' : ''}>Cub</option>
+              <option value="Scout" ${member?.stage === 'Scout' ? 'selected' : ''}>Scout</option>
+              <option value="Rover" ${member?.stage === 'Rover' ? 'selected' : ''}>Rover</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Photo URL</label>
+            <input type="url" name="photo" value="${member?.photo || ''}"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+        </div>
+        
+        <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
+          <button type="button" onclick="closeEditModal()" 
+                  class="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button type="submit" 
+                  class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg">
+            ${member ? 'Update' : 'Add'} Member
+          </button>
+        </div>
+      `;
+      
+      // Handle form submission
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        saveMember(member?.id);
+      };
+      
+      modal.classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-member-modal').classList.add('hidden');
+    }
+
+    // Save member
+    async function saveMember(memberId) {
+      const form = document.getElementById('member-form');
+      const formData = new FormData(form);
+      const memberData = Object.fromEntries(formData.entries());
+      
+      try {
+        if (window.supabaseClient) {
+          if (memberId) {
+            // Update existing member
+            const { error } = await window.supabaseClient
+              .from('prm_members')
+              .update(memberData)
+              .eq('id', memberId);
+            
+            if (error) throw error;
+          } else {
+            // Add new member
+            const { error } = await window.supabaseClient
+              .from('prm_members')
+              .insert([memberData]);
+            
+            if (error) throw error;
+          }
+          
+          // Reload members
+          await loadMembers();
+          closeEditModal();
+          
+          // Show success message
+          if (window.errorHandler) {
+            window.errorHandler.showSuccess(memberId ? 'Member updated successfully!' : 'Member added successfully!');
+          }
+        } else {
+          throw new Error('Database connection not available');
+        }
+      } catch (error) {
+        console.error('Failed to save member:', error);
+        if (window.errorHandler) {
+          window.errorHandler.showError('Failed to save member: ' + error.message);
+        }
+      }
+    }
+
+    // Delete member
+    async function deleteMember(memberId) {
+      if (!confirm('Are you sure you want to delete this member?')) return;
+      
+      try {
+        if (window.supabaseClient) {
+          const { error } = await window.supabaseClient
+            .from('prm_members')
+            .delete()
+            .eq('id', memberId);
+          
+          if (error) throw error;
+          
+          // Reload members
+          await loadMembers();
+          
+          // Show success message
+          if (window.errorHandler) {
+            window.errorHandler.showSuccess('Member deleted successfully!');
+          }
+        } else {
+          throw new Error('Database connection not available');
+        }
+      } catch (error) {
+        console.error('Failed to delete member:', error);
+        if (window.errorHandler) {
+          window.errorHandler.showError('Failed to delete member: ' + error.message);
+        }
+      }
+    }
+
+    // Export to CSV
+    function exportToCSV() {
+      const headers = ['Name', 'Position', 'Team', 'Email', 'Phone', 'District', 'Scout Group', 'Stage'];
+      const csvContent = [
+        headers.join(','),
+        ...filteredMembers.map(member => [
+          member.name || '',
+          member.position || '',
+          member.team_name || '',
+          member.email || '',
+          member.phone || '',
+          member.district || '',
+          member.scout_group || '',
+          member.stage || ''
+        ].map(field => `"${field}"`).join(','))
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `prm-members-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }
+
+    // Global functions
+    window.openMemberModal = openMemberModal;
+    window.closeMemberModal = closeMemberModal;
+    window.editMember = editMember;
+    window.deleteMember = deleteMember;
+    window.closeEditModal = closeEditModal;
+  </script>
+</body>
+</html>

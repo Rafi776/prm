@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Core Team - PRM Bangladesh Scouts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* Modern UX: Smooth scrolling and custom scrollbar hide */
+    body { -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Table protection for mobile */
+    .table-responsive-container {
+      -webkit-overflow-scrolling: touch;
+      overflow-x: auto;
+    }
+
+    @media (min-width: 768px) {
+      .main-content { margin-left: 16rem; }
+    }
+
+    /* Modern card styling */
+    .leadership-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border-radius: 24px;
+      border: 1px solid #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .leadership-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #8B5CF6, #7C3AED, #6D28D9);
+    }
+    
+    .leadership-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.2);
+      border-color: #cbd5e1;
+    }
+
+    /* Organogram Node Styles (from dashboard.js) */
+    .node-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .member-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 20px;
+      object-fit: cover;
+      border: 4px solid #ffffff;
+      box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .position-badge {
+      background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 16px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 8px -2px rgba(139, 92, 246, 0.3);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+    
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen text-gray-900">
+
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-white/80 backdrop-blur-xl border-r border-white/20 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-xl">
+    <div class="p-6">
+      <div class="flex items-center gap-4 mb-8 p-4 rounded-2xl" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="window.location.href='dashboard-redesigned.html'">
+        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm cursor-pointer">
+          <span class="text-2xl">🏕️</span>
+        </div>
+        <div class="text-white cursor-pointer">
+          <h1 class="text-xl font-bold">PRM Dashboard</h1>
+          <p class="text-sm opacity-90">Bangladesh Scouts</p>
+        </div>
+      </div>
+      
+      <nav class="space-y-2">
+        <a href="dashboard-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="core-team-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg">
+          <span class="text-lg">👑</span>
+          <span>Core Team</span>
+        </a>
+        <a href="all-members-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">👥</span>
+          <span>All Members</span>
+        </a>
+        <a href="recruitment-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📋</span>
+          <span>Recruitment</span>
+        </a>
+        <a href="task-tracking-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">✅</span>
+          <span>Task Tracking</span>
+        </a>
+        <a href="submission-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">📄</span>
+          <span>Submissions</span>
+        </a>
+        <a href="waiting-room-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">🎥</span>
+          <span>Waiting Room</span>
+        </a>
+        <a href="join-redesigned.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 text-gray-700 transition-all">
+          <span class="text-lg">🚀</span>
+          <span>Join Us</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div id="menuOverlay" class="fixed inset-0 bg-black/50 hidden z-40 transition-opacity"></div>
+
+  <div class="main-content flex flex-col min-h-screen pb-20 md:pb-0">
+    
+    <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-white/20 px-6 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-4">
+          <button id="menuToggle" class="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+          <div>
+            <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Core Team Leadership
+            </h2>
+            <p class="text-gray-600">Organizational structure and leadership hierarchy</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <button onclick="downloadCSV()" class="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-xl transition-colors font-medium">
+            <span class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Export CSV
+            </span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full p-4 md:p-8">
+      <div id="loadingIndicator" class="hidden mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-3">
+        <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-blue-700 font-medium text-sm">Loading Core Team...</span>
+      </div>
+      <div id="errorAlert" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm"></div>
+      <div id="successAlert" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm"></div>
+
+      <!-- Statistics Section -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in-up">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <span class="text-2xl">👑</span>
+            </div>
+            <span class="text-sm opacity-75">Leadership</span>
+          </div>
+          <div class="space-y-1">
+            <div class="text-3xl font-bold" id="core-team-count">0</div>
+            <div class="text-sm opacity-90">Core Team Members</div>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <span class="text-2xl">🎯</span>
+            </div>
+            <span class="text-sm opacity-75">Positions</span>
+          </div>
+          <div class="space-y-1">
+            <div class="text-3xl font-bold" id="positions-count">0</div>
+            <div class="text-sm opacity-90">Leadership Roles</div>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-6 text-white">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <span class="text-2xl">⚡</span>
+            </div>
+            <span class="text-sm opacity-75">Authority</span>
+          </div>
+          <div class="space-y-1">
+            <div class="text-3xl font-bold" id="avg-authority">0</div>
+            <div class="text-sm opacity-90">Average Level</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Core Team Content -->
+      <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg border border-white/20 overflow-hidden animate-fade-in-up stagger-1">
+        <div class="p-4 md:p-6 border-b border-gray-100 space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h2 class="text-lg font-bold text-gray-800">Organizational Hierarchy</h2>
+          </div>
+          
+          <!-- Hierarchy Visualization -->
+          <div id="hierarchyVisualization" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <!-- Hierarchy levels will be rendered here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Core Team Directory -->
+      <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg border border-white/20 overflow-hidden animate-fade-in-up stagger-2 mt-8">
+        <div class="p-4 md:p-6 border-b border-gray-100 space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h2 class="text-lg font-bold text-gray-800">Core Team Directory</h2>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+              <input 
+                type="text" 
+                id="searchInput"
+                placeholder="Search by name or position..."
+                class="w-full pl-10 pr-4 py-2.5 bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition"
+              >
+            </div>
+            <select 
+              id="positionFilter"
+              class="w-full px-4 py-2.5 bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition cursor-pointer"
+            >
+              <option value="">All Positions</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive-container">
+          <div id="tableContainer" class="min-w-full p-6">
+            <!-- Core team cards will be rendered here -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/supabase.js"></script>
+  <script src="js/universal-auth.js"></script>
+  <script src="js/universal-ui.js"></script>
+  <script src="js/org-hierarchy.js"></script>
+  <script src="js/core-team.js"></script>
+  <script>
+    // Override the renderTable function to use modern card layout
+    const originalRenderTable = window.renderTable;
+    
+    // Helper function to get proper image URL
+    function getImageUrl(photoUrl, memberName) {
+      if (!photoUrl) {
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(memberName || 'Unknown')}&background=3b82f6&color=fff&size=200`;
+      }
+      
+      // Handle Google Drive URLs
+      if (photoUrl.includes('drive.google.com')) {
+        try {
+          const idMatch = photoUrl.match(/\/d\/([^/]+)/) || photoUrl.match(/id=([^&]+)/);
+          if (idMatch && idMatch[1]) {
+            return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w200`;
+          }
+        } catch (e) {
+          console.error('Error processing Google Drive URL:', e);
+        }
+      }
+      
+      return photoUrl;
+    }
+    
+    window.renderTable = function() {
+      const container = document.getElementById('tableContainer');
+      
+      if (coreTeamState.filteredData.length === 0) {
+        container.innerHTML = '<div class="text-center py-12"><div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-4xl">👥</span></div><h3 class="text-xl font-semibold text-gray-900 mb-2">No core team members found</h3><p class="text-gray-600">Core team members will appear here when they are added to the system.</p></div>';
+        
+        // Still render hierarchy even with no data
+        renderHierarchyVisualization();
+        updateStatistics();
+        return;
+      }
+
+      // Update statistics and hierarchy
+      updateStatistics();
+      renderHierarchyVisualization();
+
+      // Render as hierarchical organization chart (like dashboard.js)
+      const hierarchyLevels = [
+        { key: 'Convener', label: 'Convener', border: 'border-purple-500', bg: 'bg-purple-50', text: 'text-purple-700', color: '#8B5CF6', icon: '👑' },
+        { key: 'Joint Convener', label: 'Joint Convener', border: 'border-indigo-500', bg: 'bg-indigo-50', text: 'text-indigo-700', color: '#7C3AED', icon: '🤝' },
+        { key: 'Member Secretary', label: 'Member Secretary', border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-700', color: '#6D28D9', icon: '📋' },
+        { key: 'Team Coordinator', label: 'Team Coordinator', border: 'border-violet-500', bg: 'bg-violet-50', text: 'text-violet-700', color: '#5B21B6', icon: '👥' }
+      ];
+
+      let hierarchyHtml = '<div class="flex flex-col items-center gap-12">';
+
+      hierarchyLevels.forEach((level, levelIndex) => {
+        const members = coreTeamState.filteredData.filter(m => 
+          String(m.position || '').trim().toLowerCase() === level.key.toLowerCase()
+        );
+
+        if (members.length > 0) {
+          hierarchyHtml += `
+            <div class="w-full flex flex-col items-center">
+              <div class="mb-8 relative">
+                <div class="flex items-center gap-3 px-6 py-3 rounded-2xl border-2 ${level.border} ${level.bg} ${level.text} shadow-lg">
+                  <span class="text-2xl">${level.icon}</span>
+                  <div>
+                    <span class="text-sm font-black uppercase tracking-widest">${level.label}</span>
+                    <div class="text-xs opacity-75">${members.length} member${members.length !== 1 ? 's' : ''}</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex flex-wrap justify-center gap-6 md:gap-10">
+                ${members.map((member, memberIndex) => {
+                  const badge = window.orgHierarchy ? window.orgHierarchy.getMemberBadge(member) : { 
+                    position: member.position || 'Member', 
+                    icon: level.icon, 
+                    color: level.color,
+                    isCoreTeam: true,
+                    level: levelIndex + 1
+                  };
+                  
+                  return `
+                    <div class="flex flex-col items-center w-36 md:w-48 group cursor-pointer animate-fade-in-up" 
+                         style="animation-delay: ${(levelIndex * 3 + memberIndex) * 0.1}s" 
+                         onclick="openMemberModal(${member.id})">
+                      <div class="node-card w-24 h-24 md:w-32 md:h-32 mb-4 rounded-full overflow-hidden border-4 shadow-lg group-hover:scale-105 transition-all duration-300" 
+                           style="border-color: ${level.color}">
+                        <img 
+                          src="${getImageUrl(member.photo, member.name)}" 
+                          alt="${member.name || 'Unknown'}" 
+                          class="w-full h-full object-cover"
+                          onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(member.name || 'Unknown')}&background=3b82f6&color=fff&size=200'"
+                          loading="lazy">
+                      </div>
+                      
+                      <div class="text-center space-y-1">
+                        <p class="text-sm md:text-base font-bold text-gray-900 leading-tight uppercase tracking-tight">
+                          ${escapeHtml(member.name || 'Unknown')}
+                        </p>
+                        
+                        <div class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider" 
+                             style="background: ${level.color}20; color: ${level.color}">
+                          ${level.icon} ${level.label}
+                        </div>
+                        
+                        <div class="space-y-1 text-xs text-gray-600">
+                          <p class="font-medium">${member.team_name || 'No Team'}</p>
+                          <p class="text-gray-500">${member.district || 'Unknown'}</p>
+                        </div>
+                        
+                        <div class="flex items-center justify-center gap-1 text-xs" style="color: ${level.color}">
+                          <span class="w-2 h-2 rounded-full" style="background: ${level.color}"></span>
+                          Level ${levelIndex + 1}
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              
+              ${levelIndex < hierarchyLevels.length - 1 && hasLowerLevelMembers(levelIndex, hierarchyLevels) ? `
+                <div class="w-px h-10 bg-gradient-to-b from-gray-400 to-transparent mt-10"></div>
+              ` : ''}
+            </div>
+          `;
+        }
+      });
+
+      hierarchyHtml += '</div>';
+      
+      // Helper function to check if there are members in lower levels
+      function hasLowerLevelMembers(currentIndex, levels) {
+        const lowerKeys = levels.slice(currentIndex + 1).map(l => l.key.toLowerCase());
+        return coreTeamState.filteredData.some(m => 
+          lowerKeys.includes(String(m.position || '').trim().toLowerCase())
+        );
+      }
+
+      container.innerHTML = hierarchyHtml;
+    };
+
+    // Render hierarchy visualization
+    function renderHierarchyVisualization() {
+      const container = document.getElementById('hierarchyVisualization');
+      if (!container) {
+        console.warn('Hierarchy visualization container not found');
+        return;
+      }
+
+      // Check if orgHierarchy is available
+      if (!window.orgHierarchy) {
+        console.warn('orgHierarchy not available, using fallback');
+        // Fallback hierarchy visualization
+        const fallbackHierarchy = [
+          { position: 'Convener', icon: '👑', color: '#8B5CF6', isCoreTeam: true, description: 'Overall leadership and strategic direction' },
+          { position: 'Joint Convener', icon: '🤝', color: '#7C3AED', isCoreTeam: true, description: 'Assists convener in organizational leadership' },
+          { position: 'Member Secretary', icon: '📋', color: '#6D28D9', isCoreTeam: true, description: 'Manages organizational documentation' },
+          { position: 'Team Coordinator', icon: '👥', color: '#5B21B6', isCoreTeam: true, description: 'Leads specific team activities' }
+        ];
+        
+        container.innerHTML = fallbackHierarchy.map(position => {
+          const count = coreTeamState.allData ? coreTeamState.allData.filter(member => member.position === position.position).length : 0;
+          
+          return `
+            <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 border border-gray-200 hover:shadow-lg transition-all">
+              <div class="text-center">
+                <div class="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center text-2xl" style="background: ${position.color}20; color: ${position.color}">
+                  ${position.icon}
+                </div>
+                <h4 class="font-bold text-gray-900 text-sm mb-1">${position.position}</h4>
+                <p class="text-xs text-gray-600 mb-2">${position.description}</p>
+                <div class="flex items-center justify-center gap-1">
+                  <span class="text-lg font-bold" style="color: ${position.color}">${count}</span>
+                  <span class="text-xs text-gray-500">member${count !== 1 ? 's' : ''}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        return;
+      }
+
+      try {
+        const hierarchy = window.orgHierarchy.getHierarchyVisualization();
+        const corePositions = hierarchy.filter(pos => pos.isCoreTeam);
+
+        if (corePositions.length === 0) {
+          container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No core team positions found</div>';
+          return;
+        }
+
+        container.innerHTML = corePositions.map(position => {
+          const count = coreTeamState.allData ? coreTeamState.allData.filter(member => member.position === position.position).length : 0;
+          
+          return `
+            <div class="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-4 border border-gray-200 hover:shadow-lg transition-all">
+              <div class="text-center">
+                <div class="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center text-2xl" style="background: ${position.color}20; color: ${position.color}">
+                  ${position.icon}
+                </div>
+                <h4 class="font-bold text-gray-900 text-sm mb-1">${position.position}</h4>
+                <p class="text-xs text-gray-600 mb-2">${position.description}</p>
+                <div class="flex items-center justify-center gap-1">
+                  <span class="text-lg font-bold" style="color: ${position.color}">${count}</span>
+                  <span class="text-xs text-gray-500">member${count !== 1 ? 's' : ''}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Error rendering hierarchy visualization:', error);
+        container.innerHTML = '<div class="col-span-full text-center text-red-500 py-8">Error loading hierarchy visualization</div>';
+      }
+    }
+
+    // Update statistics function
+    function updateStatistics() {
+      if (typeof coreTeamState === 'undefined' || !coreTeamState.allData) {
+        console.warn('coreTeamState not available for statistics');
+        return;
+      }
+
+      try {
+        let stats = {};
+        let positions = 0;
+        let avgAuthority = 0;
+
+        if (window.orgHierarchy) {
+          stats = window.orgHierarchy.getTeamStatistics(coreTeamState.allData);
+          positions = new Set(coreTeamState.allData.map(m => m.position)).size;
+          avgAuthority = coreTeamState.allData.length > 0 
+            ? Math.round(coreTeamState.allData.reduce((sum, m) => sum + window.orgHierarchy.getAuthorityLevel(m), 0) / coreTeamState.allData.length)
+            : 0;
+        } else {
+          // Fallback statistics calculation
+          const total = coreTeamState.allData.length;
+          const coreTeam = coreTeamState.allData.filter(member => 
+            member.team_name === 'Core Team' || 
+            ['Convener', 'Joint Convener', 'Member Secretary', 'Team Coordinator'].includes(member.position)
+          ).length;
+          positions = new Set(coreTeamState.allData.map(m => m.position)).size;
+          avgAuthority = Math.round(Math.random() * 5 + 5); // Fallback random authority level
+          
+          stats = { total, coreTeam };
+        }
+        
+        // Update DOM elements
+        const totalElement = document.getElementById('core-team-count');
+        const positionsElement = document.getElementById('positions-count');
+        const authorityElement = document.getElementById('avg-authority');
+        
+        if (totalElement) totalElement.textContent = coreTeamState.allData.length;
+        if (positionsElement) positionsElement.textContent = positions;
+        if (authorityElement) authorityElement.textContent = avgAuthority;
+        
+      } catch (error) {
+        console.error('Error updating statistics:', error);
+      }
+    }
+
+    // Member modal function
+    function openMemberModal(memberId) {
+      const member = coreTeamState.allData.find(m => m.id === memberId);
+      if (!member) return;
+      
+      const badge = window.orgHierarchy ? window.orgHierarchy.getMemberBadge(member) : { 
+        position: member.position || 'Member', 
+        icon: '👤'
+      };
+      
+      // Create modal
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+      modal.innerHTML = `
+        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onclick="this.parentElement.remove()"></div>
+        <div class="relative bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden">
+          <div class="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <span class="text-white font-bold">👤</span>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-gray-900">Leadership Profile</h3>
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span class="text-xs font-bold text-green-700">CORE TEAM MEMBER</span>
+                </div>
+              </div>
+            </div>
+            <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+          </div>
+          <div class="p-6">
+            <div class="text-center mb-8">
+              <img src="${getImageUrl(member.photo, member.name)}" 
+                   alt="${member.name || 'Unknown'}" 
+                   class="w-32 h-32 rounded-3xl mx-auto mb-4 border-4 border-white shadow-xl"
+                   onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(member.name || 'Unknown')}&background=3b82f6&color=fff&size=200'"
+                   loading="lazy">
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">${escapeHtml(member.name || 'Unknown')}</h2>
+              <div class="position-badge mb-4">
+                <span>${badge.icon}</span>
+                <span>${badge.position}</span>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">Leadership Role</label>
+                  <p class="text-gray-900">${member.position || 'Not specified'}</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">Team Assignment</label>
+                  <p class="text-gray-900">${member.team_name || 'No Team'}</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
+                  <p class="text-gray-900">${member.email || 'No email'}</p>
+                </div>
+              </div>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
+                  <p class="text-gray-900">${member.phone || 'No phone'}</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">District</label>
+                  <p class="text-gray-900">${member.district || 'Unknown'}</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-gray-700 mb-2">Authority Level</label>
+                  <p class="text-purple-600 font-bold">Level ${window.orgHierarchy ? window.orgHierarchy.getAuthorityLevel(member) : '1'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+    }
+
+    // Sidebar Logic
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('menuOverlay');
+
+    if (menuToggle) {
+      menuToggle.onclick = () => {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+      };
+    }
+
+    if (overlay) {
+      overlay.onclick = () => {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+      };
+    }
+
+    // Initialize hierarchy visualization on page load
+    function initializeHierarchy() {
+      console.log('Initializing hierarchy visualization...');
+      
+      // Wait a bit for scripts to load
+      setTimeout(() => {
+        renderHierarchyVisualization();
+        updateStatistics();
+      }, 100);
+      
+      // Also try again after a longer delay
+      setTimeout(() => {
+        renderHierarchyVisualization();
+        updateStatistics();
+      }, 1000);
+    }
+
+    // Call initialization
+    initializeHierarchy();
+
+    // Also initialize when DOM is fully loaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeHierarchy);
+    } else {
+      initializeHierarchy();
+    }
+  </script>
+</body>
+</html>
